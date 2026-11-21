@@ -1,0 +1,9 @@
+{
+  "formData": {
+    "bookingFor": "self",
+    "propertyType": "vehicle",
+    "propertyOwner": "Ricardo Dalisay",
+    "vehiclePlate": "NBC 1234",
+    "occasion": "New jeepney"
+  }
+}

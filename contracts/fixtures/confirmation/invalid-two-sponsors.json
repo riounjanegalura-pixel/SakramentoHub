@@ -1,0 +1,37 @@
+{
+    "formData": {
+        "bookingFor": "self",
+        "confirmandFirstName": "Andrea",
+        "confirmandLastName": "Villanueva",
+        "confirmandDateOfBirth": "2010-03-08",
+        "confirmandPlaceOfBirth": "Balagtas, Bulacan",
+        "confirmandSex": "female",
+        "fatherFirstName": "Ramon",
+        "fatherLastName": "Villanueva",
+        "motherFirstName": "Celia",
+        "motherLastName": "Ramos",
+        "baptismParish": "St. Peter the Apostle Parish",
+        "baptismParishAddress": "Balagtas, Bulacan",
+        "baptismDate": "2010-06-20",
+        "sponsors": [
+            {
+                "role": "ninang",
+                "firstName": "Grace",
+                "lastName": "Mendoza",
+                "age": 40,
+                "religion": "Roman Catholic",
+                "residence": "Bocaue, Bulacan"
+            },
+            {
+                "role": "ninong",
+                "firstName": "Ben",
+                "lastName": "Cruz",
+                "age": 45,
+                "religion": "Roman Catholic",
+                "residence": "Bocaue, Bulacan"
+            }
+        ],
+        "baptismalCertificate": "/documents/{OWNER}/baptismal.pdf"
+    },
+    "expectErrorKey": "sponsors"
+}

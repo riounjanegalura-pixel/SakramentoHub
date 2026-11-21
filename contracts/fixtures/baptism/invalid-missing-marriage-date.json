@@ -1,0 +1,48 @@
+{
+    "formData": {
+        "bookingFor": "other",
+        "relationship": "child",
+        "scheduleType": "regular",
+        "childFirstName": "José Miguel",
+        "childMiddleName": "Ñiguez",
+        "childLastName": "Dela Cruz-Santos",
+        "childSuffix": "Jr.",
+        "childDateOfBirth": "2026-07-14",
+        "childPlaceOfBirth": "Balagtas, Bulacan",
+        "childSex": "male",
+        "fatherOmitted": false,
+        "fatherFirstName": "Juan",
+        "fatherLastName": "Dela Cruz-Santos",
+        "fatherPlaceOfBirth": "Malolos City, Bulacan",
+        "fatherReligion": "Roman Catholic",
+        "motherFirstName": "Ma. Teresa",
+        "motherLastName": "Ñiguez",
+        "motherPlaceOfBirth": "Bocaue, Bulacan",
+        "motherReligion": "Roman Catholic",
+        "parentsResidence": "San Juan, Balagtas, Bulacan",
+        "parentsResidenceLine": "123 Mabini St.",
+        "parentsMarriage": "catholic",
+        "parentsMarriagePlace": "St. Peter the Apostle Parish, Balagtas",
+        "sponsors": [
+            {
+                "role": "ninong",
+                "firstName": "Pedro",
+                "lastName": "Reyes",
+                "age": 34,
+                "religion": "Roman Catholic",
+                "residence": "Bocaue, Bulacan"
+            },
+            {
+                "role": "ninang",
+                "firstName": "Liza",
+                "lastName": "Soriano",
+                "age": 29,
+                "religion": "Roman Catholic",
+                "residence": "Balagtas, Bulacan"
+            }
+        ],
+        "birthCertificate": "/documents/{OWNER}/birth.pdf",
+        "marriageContract": "/documents/{OWNER}/marriage.pdf"
+    },
+    "expectErrorKey": "parentsMarriageDate"
+}

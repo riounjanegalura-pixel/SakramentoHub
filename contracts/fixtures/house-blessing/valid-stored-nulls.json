@@ -1,0 +1,14 @@
+{
+  "formData": {
+    "bookingFor": "self",
+    "propertyType": "house",
+    "propertyOwner": "Ricardo Dalisay",
+    "propertyAddress": "Wawa, Balagtas, Bulacan",
+    "propertyAddressLine": "Blk 4 Lot 9",
+    "occasion": null,
+    "alternatePhone": null,
+    "relationship": null,
+    "vehiclePlate": null,
+    "propertyDescription": null
+  }
+}

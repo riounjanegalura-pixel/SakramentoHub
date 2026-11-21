@@ -1,0 +1,17 @@
+# Keeps secrets, local databases and runtime files out of the image (docker build context: backend/).
+# vendor and tests are not needed: the Dockerfile runs `composer install --no-dev` itself.
+.env
+.env.*
+!.env.example
+database/*.sqlite*
+storage/app/private/**
+storage/logs/**
+storage/framework/cache/**
+storage/framework/sessions/**
+storage/framework/views/**
+# Keep the placeholder files so those folders still exist in the image.
+!storage/**/.gitignore
+node_modules
+vendor
+tests
+.phpunit.cache

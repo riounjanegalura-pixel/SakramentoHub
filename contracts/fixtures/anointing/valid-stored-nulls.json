@@ -1,0 +1,18 @@
+{
+  "formData": {
+    "bookingFor": "other",
+    "relationship": "parent",
+    "patientFirstName": "Consolacion",
+    "patientLastName": "Aquino",
+    "patientSex": "female",
+    "patientAge": 88,
+    "locationType": "hospital",
+    "hospitalName": "Bulacan Medical Center",
+    "hospitalRoom": "Ward 3, Bed 12",
+    "inDangerOfDeath": false,
+    "alternatePhone": null,
+    "patientMiddleName": null,
+    "patientAddress": null,
+    "patientAddressLine": null
+  }
+}

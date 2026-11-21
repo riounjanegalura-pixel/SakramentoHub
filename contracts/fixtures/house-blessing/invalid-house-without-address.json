@@ -1,0 +1,9 @@
+{
+    "formData": {
+        "bookingFor": "self",
+        "propertyType": "house",
+        "propertyOwner": "Ricardo Dalisay",
+        "occasion": "Newly built home"
+    },
+    "expectErrorKey": "propertyAddress"
+}

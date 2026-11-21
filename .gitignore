@@ -1,0 +1,8 @@
+# Secrets and local files, never commit these
+.env
+.env.*
+!*.example
+node_modules/
+vendor/
+dist/
+*.log

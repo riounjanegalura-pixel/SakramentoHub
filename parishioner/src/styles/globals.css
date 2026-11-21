@@ -1,0 +1,258 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces Variable", Georgia, serif;
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  --radius: 0.5rem;
+
+}
+
+@theme inline {
+  /* Type roles. Utilities: text-display, text-title, text-heading, text-body, text-note, text-label. */
+  --text-display: var(--fs-display);
+  --text-display--line-height: 1.15;
+  --text-title: var(--fs-title);
+  --text-title--line-height: 1.25;
+  --text-heading: var(--fs-heading);
+  --text-heading--line-height: 1.35;
+  --text-body: var(--fs-body);
+  --text-body--line-height: 1.5;
+  --text-note: var(--fs-note);
+  --text-note--line-height: 1.5;
+  --text-label: var(--fs-label);
+  --text-label--line-height: 1.4;
+  /* Entry title: use with font-display. Amount: Inter 700, set with tabular figures by the caller. */
+  --text-display-xl: var(--fs-display-xl);
+  --text-display-xl--line-height: 1.12;
+  --text-display-xl--letter-spacing: -0.015em;
+  --text-amount: var(--fs-amount);
+  --text-amount--line-height: 1.1;
+  --text-amount--font-weight: 700;
+}
+
+:root {
+  color-scheme: light;
+  /* Type scale, phone first; the desktop column is set under the media query below. */
+  --fs-display: 1.875rem;
+  --fs-title: 1.5rem;
+  --fs-heading: 1.125rem;
+  --fs-body: 1.0625rem;
+  --fs-note: 0.9375rem;
+  --fs-label: 0.875rem;
+  /* Parish register design tokens (spec section 3). One source per app. */
+  --paper: #FAF8F4;
+  --surface: #FFFFFF;
+  --line: #E4E0D6;
+  --ink: #1E1F24;
+  --ink-muted: #5B6172;
+  --navy: #1B2A4A;
+  --navy-deep: #14203A;
+  /* Decorative only: never a text colour, never the focus ring. */
+  --gold: #D4AD63;
+  --gold-text: #7A5F25;
+  --gold-press: #B8934A;
+  --status-pending-bg: #FDF4E0;
+  --status-pending-fg: #7A5300;
+  --status-confirmed-bg: #E8EEF8;
+  --status-confirmed-fg: #1B2A4A;
+  --status-rejected-bg: #FBE9E7;
+  --status-rejected-fg: #A3261C;
+  --status-done-bg: #E7F3E4;
+  --status-done-fg: #2F6B1E;
+  --danger: #A3261C;
+  --focus: #1B2A4A;
+  --input-border: #8A8F9C;
+  /* Register additions. paper-deep: the quiet tile and ticket-stub fill, on paper.
+     on-navy: secondary text on navy (8.9:1). hollow: dashed lines and future-step rings (3.05:1 on paper),
+     so shapes only, never text. */
+  --paper-deep: #F3EFE6;
+  --on-navy: #C5CDE0;
+  --hollow: #8A8F9C;
+  /* Two type roles on top of the scale below: the entry title (one per screen) and money. */
+  --fs-display-xl: clamp(1.625rem, 6vw, 2.125rem);
+  --fs-amount: 2.5rem;
+
+  /* Room the chrome takes: the sticky header on top and the docked tab bar below (bar 64 px + 16 px air). */
+  --chrome-top: 4.5rem;
+  --chrome-bottom: calc(5rem + env(safe-area-inset-bottom));
+  /* Room the booking wizard's fixed footer takes (spec section 12): 56 px Continue + 2 x 16 px padding + 1 px border, plus ~19 px air. */
+  --wizard-footer: calc(6.75rem + env(safe-area-inset-bottom));
+
+  /* shadcn/ui variables mapped onto the tokens above. */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  /* Navy is the action colour; gold is decorative only. */
+  --primary: var(--navy);
+  --primary-foreground: var(--surface);
+  --secondary: var(--paper);
+  --secondary-foreground: var(--navy);
+  --muted: var(--paper);
+  --muted-foreground: var(--ink-muted);
+  --accent: var(--status-pending-bg);
+  --accent-foreground: var(--navy);
+  --destructive: var(--danger);
+  --destructive-foreground: var(--surface);
+  --border: var(--line);
+  --input: var(--input-border);
+  --ring: var(--focus);
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-line: var(--line);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-navy: var(--navy);
+  --color-navy-deep: var(--navy-deep);
+  --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
+  --color-gold-press: var(--gold-press);
+  --color-status-pending-bg: var(--status-pending-bg);
+  --color-status-pending-fg: var(--status-pending-fg);
+  --color-status-confirmed-bg: var(--status-confirmed-bg);
+  --color-status-confirmed-fg: var(--status-confirmed-fg);
+  --color-status-rejected-bg: var(--status-rejected-bg);
+  --color-status-rejected-fg: var(--status-rejected-fg);
+  --color-status-done-bg: var(--status-done-bg);
+  --color-status-done-fg: var(--status-done-fg);
+  --color-danger: var(--danger);
+  --color-focus: var(--focus);
+  --color-input-border: var(--input-border);
+  --color-paper-deep: var(--paper-deep);
+  --color-on-navy: var(--on-navy);
+  --color-hollow: var(--hollow);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --fs-display: 2.5rem;
+    --fs-title: 1.75rem;
+    --fs-heading: 1.1875rem;
+    --fs-body: 1rem;
+    --fs-display-xl: 2.75rem;
+  }
+}
+
+/* The `dark:` variant in the kit files stays bound to a class nothing sets: light only. */
+@custom-variant dark (&:is(.dark *));
+
+/* Kit parts (shadcn v4 sets data-slot on every one) get the brand border colour and the focus ring.
+   Deliberately NOT a global `*` rule: about 85 existing files use a bare `border` and rely on currentColor. */
+@layer base {
+  [data-slot] {
+    border-color: var(--border);
+    outline-color: var(--focus);
+  }
+  /* No control is ever without a focus ring: this zero-specificity fallback covers every link, button, summary and
+     field a screen forgot to style. A real outline also survives forced-colors mode, which box-shadow rings do not. */
+  :where(a[href], button, summary, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+  /* Keyboard focus: the focus token at full strength, 2 px wide, with a 2 px white gap. */
+  [data-slot]:focus-visible {
+    outline-style: solid;
+    outline-width: 2px;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--surface);
+  }
+}
+
+/* vaul runs its own CSS transition and ignores the motion library, so it is stopped here. */
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer],
+  [data-vaul-overlay] {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* A focused control scrolls into view clear of the chrome, only while the phone shell
+   draws it (AppShell sets data-chrome); a desktop page has neither and gets no scroll padding. */
+html:has([data-chrome~="top"]) {
+  scroll-padding-top: var(--chrome-top);
+}
+html:has([data-chrome~="bottom"]) {
+  scroll-padding-bottom: var(--chrome-bottom);
+}
+html:has([data-chrome~="wizard-footer"]) {
+  scroll-padding-bottom: var(--wizard-footer);
+}
+
+body {
+  @apply bg-paper text-ink font-sans;
+  /* A long word wraps instead of pushing the page sideways at large text sizes. */
+  overflow-wrap: anywhere;
+}
+
+/* Native radio/checkbox controls default to blue in every browser; they take the navy action colour. */
+input[type="radio"],
+input[type="checkbox"] {
+  accent-color: var(--navy);
+}
+
+/* Printing the day pass: only the pass itself comes out of the printer. */
+@media print {
+  /* Hidden content still takes its height: cut the page to one sheet, or blank pages follow the pass. */
+  html, body { height: 100%; overflow: hidden; }
+  body * { visibility: hidden; }
+  .day-pass, .day-pass * { visibility: visible; }
+  .day-pass { position: absolute; left: 0; top: 0; width: 100%; border: 0; }
+  .no-print { display: none !important; }
+}
+
+/* Amounts and register numbers: tabular figures in the mono family. */
+.numeric {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The desktop booking wizard is one column; its plain fields sit two to a row. Anything else (headings, tabs, choice cards,
+   the address picker) keeps the full width, so only a field next to a field ever shares a row. */
+@media (min-width: 768px) {
+  .web-wizard-card [data-step-body]:has(> [data-slot='field']),
+  .web-wizard-card fieldset:has(> [data-slot='field']) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
+  .web-wizard-card [data-step-body]:has(> [data-slot='field']) > :not([data-slot='field']),
+  .web-wizard-card fieldset:has(> [data-slot='field']) > :not([data-slot='field']) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* In the wide wizard the four address lists sit two to a row (region and province, town and barangay). */
+@media (min-width: 768px) {
+  .web-wizard-card [data-address-grid] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
+}

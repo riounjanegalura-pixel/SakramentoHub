@@ -1,0 +1,20 @@
+{
+  "formData": {
+    "bookingFor": "other",
+    "relationship": "child",
+    "deceasedFirstName": "Lorenzo",
+    "deceasedLastName": "Pascual",
+    "deceasedSex": "male",
+    "deceasedAge": 81,
+    "deceasedCivilStatus": "widowed",
+    "deceasedReligion": "Roman Catholic",
+    "deceasedDateOfDeath": "{TODAY-5}",
+    "deceasedResidence": "San Juan, Balagtas, Bulacan",
+    "burialCemetery": "Balagtas Public Cemetery",
+    "burialDate": "{TODAY+2}",
+    "massType": "house",
+    "houseMassAddress": "San Juan, Balagtas, Bulacan",
+    "houseMassAddressLine": "45 Rizal St.",
+    "deathCertificate": "/documents/{OWNER}/death.pdf"
+  }
+}
