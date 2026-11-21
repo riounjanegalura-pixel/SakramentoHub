@@ -334,3 +334,6 @@ export interface PaymentQr {
   amountCentavos: number
   reference: string
 }
+
+/** What the Scan to give page waits for. Allowed here: this file may name a payment state. */
+export type DonationStatus = { status: 'pending' | 'paid' }
