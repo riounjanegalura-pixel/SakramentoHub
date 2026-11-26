@@ -37,7 +37,7 @@ describe('ForgotPasswordScreen', () => {
     expect(email).toHaveAttribute('type', 'email')
     expect(email).toHaveAttribute('autocomplete', 'email')
     expect(email).toHaveAttribute('inputmode', 'email')
-    expect(screen.getByRole('button', { name: 'Send Reset Link' })).toHaveClass('bg-navy', 'text-white')
+    expect(screen.getByRole('button', { name: 'Send Reset Link' })).toHaveClass('bg-gold', 'text-navy')
     expect(screen.getByRole('link', { name: 'Back to sign in' })).toHaveAttribute('href', '/login')
   })
 

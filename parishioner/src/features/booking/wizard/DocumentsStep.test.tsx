@@ -54,7 +54,7 @@ describe('Documents step review states', () => {
     expect(await screen.findByText(/needs a new file/i)).toBeInTheDocument()
     expect(screen.getByText(/blurry — please re-upload/i)).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     expect(await screen.findByText(/upload a new file/i, { selector: 'p' })).toBeInTheDocument()
     expect(next).not.toHaveBeenCalled()
   })
@@ -69,7 +69,7 @@ describe('Documents step review states', () => {
     await user.upload(screen.getByLabelText(/death certificate/i), new File(['x'], 'new.pdf', { type: 'application/pdf' }))
     expect(await screen.findByText(/new file ready/i)).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     await waitFor(() => expect(next).toHaveBeenCalled())
     expect(useBookingStore.getState().formData.deathCertificate).toBe('/documents/u1/new.pdf')
   })
@@ -79,7 +79,7 @@ describe('Documents step review states', () => {
     fetchBooking.mockResolvedValue(serverBooking({ status: 'accepted', note: null, reviewedAt: '2026-11-02T01:00:00Z' }))
     renderStep()
     expect(await screen.findByText('Accepted')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     await waitFor(() => expect(next).toHaveBeenCalled())
   })
 

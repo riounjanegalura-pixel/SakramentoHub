@@ -46,7 +46,7 @@ describe('StepperHeader', () => {
   it('draws the active segment as the shared wizard-progress layout element, in navy', () => {
     renderHeader(3)
     const items = within(screen.getByRole('list', { name: 'Booking steps' })).getAllByRole('listitem')
-    const active = document.querySelectorAll('[data-layout-id="wizard-progress"]')
+    const active = document.querySelectorAll('[data-progress-fill="wizard-progress"]')
     expect(active).toHaveLength(1)
     expect(items[2]).toContainElement(active[0] as HTMLElement)
     expect((active[0] as HTMLElement).className).toMatch(/bg-navy/)
@@ -63,7 +63,7 @@ describe('StepperHeader', () => {
   it('under reduced motion the active segment is a plain element with no shared-layout animation', () => {
     motion.reduced = true
     renderHeader(3)
-    expect(document.querySelector('[data-layout-id="wizard-progress"]')).toBeNull()
+    expect(document.querySelector('[data-progress-fill="wizard-progress"]')).toBeNull()
     expect(document.querySelector('[data-segment="current"] [data-active]')).not.toBeNull()
   })
 

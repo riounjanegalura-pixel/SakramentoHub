@@ -61,10 +61,10 @@ describe('baptism: review shows every collected field', () => {
     expect(Object.keys(r).some((k) => k.startsWith("Father's"))).toBe(false)
   })
 
-  it('mother left out shows the reason and no mother details', () => {
-    const r = review('parents', { motherOmitted: true, motherOmittedReason: 'Unknown', fatherFirstName: 'Jose', fatherLastName: 'Santos' })
-    expect(r.Mother).toBe('Not included (Unknown)')
-    expect(Object.keys(r).some((k) => k.startsWith("Mother's"))).toBe(false)
+  it('always lists the mother, whatever an older draft says', () => {
+    const r = review('parents', { motherOmitted: true, motherFirstName: 'Maria', motherLastName: 'Santos', motherPlaceOfBirth: 'Bocaue', motherReligion: 'Roman Catholic', fatherFirstName: 'Jose', fatherLastName: 'Santos' })
+    expect(r.Mother).toBe('Maria Santos')
+    expect(Object.keys(r).some((k) => k.startsWith("Mother's"))).toBe(true)
   })
 
   it("parents' marriage with date and place", () => {

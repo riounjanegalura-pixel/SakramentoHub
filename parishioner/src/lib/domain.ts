@@ -1,4 +1,4 @@
-import type { Booking, BookingStatus, ParishEventCategory, PaymentStatus, Sacrament } from './types'
+import type { Booking, BookingStatus, ParishEventCategory, ParishInfo, PaymentStatus, Sacrament } from './types'
 
 export const SACRAMENT_LABEL: Record<Sacrament, string> = {
   baptism: 'Baptism',
@@ -144,6 +144,25 @@ export function formatTime(hhmm: string): string {
   const [h, m] = hhmm.split(':').map(Number)
   const suffix = h >= 12 ? 'PM' : 'AM'
   return `${((h + 11) % 12) + 1}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+/**
+ * The office hours as one line, built only from the parish record: "Tuesday to Saturday, 8:00 AM to 5:00 PM".
+ * A run of three or more days reads as a range; anything else is listed. No days on file gives the hours alone.
+ */
+export function officeHoursText(parish: Pick<ParishInfo, 'workingHours' | 'officeDays'>): string {
+  const hours = `${formatTime(parish.workingHours.start)} to ${formatTime(parish.workingHours.end)}`
+  const days = [...new Set(parish.officeDays ?? [])].filter((d) => d >= 1 && d <= 7).sort((a, b) => a - b)
+  if (days.length === 0) return hours
+  const name = (d: number) => WEEKDAYS[d - 1]
+  const isRun = days.length >= 3 && days.every((d, i) => i === 0 || d === days[i - 1] + 1)
+  let label: string
+  if (isRun) label = `${name(days[0])} to ${name(days[days.length - 1])}`
+  else if (days.length === 1) label = name(days[0])
+  else label = `${days.slice(0, -1).map(name).join(', ')} and ${name(days[days.length - 1])}`
+  return `${label}, ${hours}`
 }
 
 /** The time a slot ends, from its start and length: "10:00" + 45 minutes = "10:45". */

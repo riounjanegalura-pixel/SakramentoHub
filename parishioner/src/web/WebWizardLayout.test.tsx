@@ -75,7 +75,7 @@ describe('WebWizardLayout', () => {
     const nav = screen.getByRole('navigation', { name: 'Booking steps' })
     const current = within(nav).getByText('Schedule').closest('[aria-current="step"]') as HTMLElement
     expect(current).not.toBeNull()
-    expect(current.querySelector('[data-layout-id="wizard-progress"]')).not.toBeNull()
+    expect(current.querySelector('[data-progress-fill="wizard-progress"]')).not.toBeNull()
     expect(nav.querySelectorAll('[data-segment="done"]')).toHaveLength(2)
   })
 

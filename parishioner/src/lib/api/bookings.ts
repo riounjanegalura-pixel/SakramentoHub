@@ -68,7 +68,7 @@ export async function fetchCertificateHtml(id: string): Promise<string> {
   return apiFetchText(`/bookings/${id}/certificate`)
 }
 
-/** Adds or replaces one of a wedding's later documents; `fileUrl` is what `POST /documents` returned. */
+/** Adds one of a wedding's later documents, or replaces a document the office sent back (any sacrament); `fileUrl` is what `POST /documents` returned. */
 export async function attachLateDocument(bookingId: string, key: string, fileUrl: string): Promise<Booking> {
   return apiFetch<Booking>(`/bookings/${bookingId}/documents/${key}`, { method: 'PUT', body: JSON.stringify({ fileUrl }) })
 }

@@ -89,8 +89,8 @@ test('staff can reschedule a submitted booking and it stays submitted', function
         'is_offsite' => true, 'form_data' => ['propertyType' => 'house', 'propertyOwner' => 'A'],
     ]);
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", [
-        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00', 'reason' => 'Asked by phone',
-    ])->assertOk()->assertJsonPath('status', 'submitted')->assertJsonPath('appointmentDate', '2026-11-12')->assertJsonPath('appointmentStart', '14:00');
+        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30', 'reason' => 'Asked by phone',
+    ])->assertOk()->assertJsonPath('status', 'submitted')->assertJsonPath('appointmentDate', '2026-11-12')->assertJsonPath('appointmentStart', '14:30');
 });
 
 test('staff can reschedule a booking with no account', function () {
@@ -100,7 +100,7 @@ test('staff can reschedule a booking with no account', function () {
     ]);
     expect($b->user_id)->toBeNull();
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", [
-        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00', 'reason' => 'Asked at the desk',
+        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30', 'reason' => 'Asked at the desk',
     ])->assertOk()->assertJsonPath('status', 'approved')->assertJsonPath('appointmentDate', '2026-11-12');
 });
 

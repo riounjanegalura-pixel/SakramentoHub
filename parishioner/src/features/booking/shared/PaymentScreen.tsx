@@ -10,7 +10,7 @@ import { Emblem } from '../../../components/shared/Emblem'
 import { useBookingStore } from '../../../stores/booking-store'
 import { chooseCashPayment, fetchBooking, initiatePayment } from '../../../lib/data/bookings'
 import { redirectTo } from '../../../lib/redirect'
-import { HOLD_EXPIRED_NOTE, SACRAMENT_LABEL, formatInstant, formatTime, paymentHoldExpired, peso } from '../../../lib/domain'
+import { HOLD_EXPIRED_NOTE, SACRAMENT_LABEL, formatInstant, officeHoursText, paymentHoldExpired, peso } from '../../../lib/domain'
 import type { Booking, ParishInfo } from '../../../lib/types'
 
 /**
@@ -207,7 +207,6 @@ function CashInstructions({ booking, parish, amount, gcash, gcashError, onView }
 }) {
   const hold = booking.paymentHoldExpiresAt
   const lapsed = hold !== null && paymentHoldExpired(booking)
-  const hours = parish?.workingHours
   return (
     <>
       <div role="status" className="rounded-xl bg-status-pending-bg p-4 text-body text-status-pending-fg">
@@ -232,7 +231,7 @@ function CashInstructions({ booking, parish, amount, gcash, gcashError, onView }
             <h2 id="where-heading" className="font-display text-[1.375rem] leading-[1.3] font-semibold text-navy">Where</h2>
             <p className="mt-2">The parish office{parish?.name ? `, ${parish.name}` : ''}</p>
             {parish?.address && <p>{parish.address}</p>}
-            {hours && <p className="tabular-nums">Open {formatTime(hours.start)} to {formatTime(hours.end)}</p>}
+            {parish?.workingHours && <p className="tabular-nums">Office hours: {officeHoursText(parish)}</p>}
             {parish?.phone && <p>Questions? Call <a className="font-semibold text-navy underline" href={`tel:${parish.phone}`}>{parish.phone}</a></p>}
           </section>
 

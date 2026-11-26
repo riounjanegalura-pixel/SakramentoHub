@@ -44,7 +44,7 @@ export function AuthPage({ title, subtitle, children }: AuthPageProps) {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-paper px-6 pb-10 pt-6 text-ink">
+    <main className="flex min-h-dvh flex-col bg-paper px-6 pb-10 pt-6 text-ink">
       <p className="flex items-center gap-3 font-display text-heading font-semibold text-navy">
         <img src={crest} alt="" aria-hidden="true" className="h-10 w-auto" />
         SakramentoHub

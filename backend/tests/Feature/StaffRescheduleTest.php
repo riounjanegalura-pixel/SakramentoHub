@@ -28,9 +28,9 @@ test('staff move an approved booking and it stays approved', function () {
     $owner = User::factory()->create();
     $b = approvedBlessing($owner);
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", [
-        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00', 'reason' => 'Family asked by phone',
+        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30', 'reason' => 'Family asked by phone',
     ])->assertOk()->assertJsonPath('status', 'approved')->assertJsonPath('appointmentDate', '2026-11-12')
-        ->assertJsonPath('appointmentStart', '14:00')->assertJsonPath('appointmentEnd', '14:45');
+        ->assertJsonPath('appointmentStart', '14:30')->assertJsonPath('appointmentEnd', '15:15');
 
     $meta = AuditLog::where('action', 'booking.rescheduled_by_staff')->where('subject_id', $b->id)->first()->metadata;
     expect($meta['fromDate'])->toBe('2026-11-10')->and($meta['reason'])->toBe('Family asked by phone')->and($meta['leadTimeWaived'])->toBeFalse();
@@ -41,16 +41,16 @@ test('the parishioner is told the new date and the reason when staff reschedule'
     $owner = User::factory()->create();
     $b = approvedBlessing($owner);
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", [
-        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00', 'reason' => 'Parish schedule conflict',
+        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30', 'reason' => 'Parish schedule conflict',
     ])->assertOk();
 
     $note = \App\Models\AppNotification::where('user_id', $owner->id)->where('title', 'Booking Rescheduled')->firstOrFail();
-    expect($note->booking_id)->toBe($b->id)->and($note->body)->toContain('2026-11-12')->toContain('14:00')->toContain('Parish schedule conflict');
+    expect($note->booking_id)->toBe($b->id)->and($note->body)->toContain('2026-11-12')->toContain('14:30')->toContain('Parish schedule conflict');
 });
 
 test('a reason is required', function () {
     $b = approvedBlessing(User::factory()->create());
-    $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", ['appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00'])->assertUnprocessable();
+    $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", ['appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30'])->assertUnprocessable();
 });
 
 test('staff cannot double-book the priest', function () {
@@ -58,13 +58,13 @@ test('staff cannot double-book the priest', function () {
     Booking::factory()->scheduled('2026-11-12', '14:00', '15:00')->create(['sacrament' => 'funeral', 'status' => 'approved', 'payment_status' => 'not_required']);
     $b = approvedBlessing($owner);
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", [
-        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00', 'reason' => 'x',
+        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30', 'reason' => 'x',
     ])->assertUnprocessable()->assertJsonPath('message', 'That time is no longer available. Please choose another.');
 });
 
 test('lead time blocks staff unless waived, and the waiver is audited', function () {
     $b = approvedBlessing(User::factory()->create()); // house blessing: 3-day lead time
-    $payload = ['appointmentDate' => '2026-11-03', 'appointmentStart' => '10:00', 'reason' => 'Urgent move-in'];
+    $payload = ['appointmentDate' => '2026-11-03', 'appointmentStart' => '10:15', 'reason' => 'Urgent move-in'];
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", $payload)->assertUnprocessable();
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", $payload + ['waiveLeadTime' => true])->assertOk();
     expect(AuditLog::where('action', 'booking.rescheduled_by_staff')->latest('created_at')->first()->metadata['leadTimeWaived'])->toBeTrue();
@@ -82,25 +82,25 @@ test('completed, declined and cancelled bookings cannot be rescheduled by staff'
     $b = approvedBlessing(User::factory()->create());
     $b->update(['status' => $status]);
     $this->actingAs($this->staff)->patchJson("/api/admin/bookings/{$b->id}/reschedule", [
-        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:00', 'reason' => 'x',
+        'appointmentDate' => '2026-11-12', 'appointmentStart' => '14:30', 'reason' => 'x',
     ])->assertUnprocessable();
 })->with(['completed', 'declined', 'cancelled', 'draft', 'returned']);
 
 test('a parishioner cannot reschedule an approved booking inside the 3-day cut-off', function () {
     $owner = User::factory()->create();
     $b = approvedBlessing($owner, '2026-11-04'); // 2 days away
-    $this->actingAs($owner)->patchJson("/api/bookings/{$b->id}/reschedule", ['appointmentDate' => '2026-11-12', 'appointmentStart' => '10:00'])
+    $this->actingAs($owner)->patchJson("/api/bookings/{$b->id}/reschedule", ['appointmentDate' => '2026-11-12', 'appointmentStart' => '10:15'])
         ->assertUnprocessable()->assertJsonPath('message', 'Approved bookings can only be rescheduled online until 3 days before the appointment. Please call the parish office at 09123456789.');
 });
 
 test('a parishioner can still reschedule an approved booking exactly 3 days out, and any submitted one', function () {
     $owner = User::factory()->create();
     $onTheLine = approvedBlessing($owner, '2026-11-05');
-    $this->actingAs($owner)->patchJson("/api/bookings/{$onTheLine->id}/reschedule", ['appointmentDate' => '2026-11-12', 'appointmentStart' => '10:00'])->assertOk();
+    $this->actingAs($owner)->patchJson("/api/bookings/{$onTheLine->id}/reschedule", ['appointmentDate' => '2026-11-12', 'appointmentStart' => '10:15'])->assertOk();
 
     $submitted = approvedBlessing($owner, '2026-11-04');
     $submitted->update(['status' => 'submitted', 'appointment_start' => '13:00', 'appointment_end' => '13:45']);
-    $this->actingAs($owner)->patchJson("/api/bookings/{$submitted->id}/reschedule", ['appointmentDate' => '2026-11-13', 'appointmentStart' => '10:00'])->assertOk();
+    $this->actingAs($owner)->patchJson("/api/bookings/{$submitted->id}/reschedule", ['appointmentDate' => '2026-11-13', 'appointmentStart' => '10:15'])->assertOk();
 });
 
 test('a returned booking past its 7-day hold no longer holds a slot', function () {

@@ -46,20 +46,20 @@ test('appointmentStartsAt is the parish-time start as an instant, null without a
 });
 
 test('a hold for an appointment five days out is 48 hours', function () {
-    $b = counterWedding($this->staff, '2026-11-07', '10:00');
+    $b = counterWedding($this->staff, '2026-11-07', '09:30');
 
     expect($b->payment_hold_expires_at->equalTo(now()->addHours(48)))->toBeTrue();
 });
 
 test('a hold for an appointment 20 hours out ends at the appointment start', function () {
-    $b = counterWedding($this->staff, '2026-11-03', '10:00');
+    $b = counterWedding($this->staff, '2026-11-03', '09:30');
 
-    expect($b->payment_hold_expires_at->equalTo(manila('2026-11-03 10:00')))->toBeTrue();
+    expect($b->payment_hold_expires_at->equalTo(manila('2026-11-03 09:30')))->toBeTrue();
 });
 
 test('a hold for an appointment 10 minutes out is one hour', function () {
-    Carbon::setTestNow(manila('2026-11-03 09:50'));
-    $b = counterWedding($this->staff, '2026-11-03', '10:00');
+    Carbon::setTestNow(manila('2026-11-03 09:20'));
+    $b = counterWedding($this->staff, '2026-11-03', '09:30');
 
     expect($b->payment_hold_expires_at->equalTo(now()->addHour()))->toBeTrue();
 });
@@ -110,11 +110,11 @@ test('a reschedule to an earlier date shortens the hold and to a later date neve
         'form_data' => formDataFixture('wedding/valid-basic', $owner->id),
     ]);
 
-    $this->sm->rescheduleByStaff($b, $this->staff, '2026-11-03', '10:00', 'Family asked', true); // starts in 20 h
-    expect($b->fresh()->payment_hold_expires_at->equalTo(manila('2026-11-03 10:00')))->toBeTrue();
+    $this->sm->rescheduleByStaff($b, $this->staff, '2026-11-03', '09:30', 'Family asked', true); // starts in 20 h
+    expect($b->fresh()->payment_hold_expires_at->equalTo(manila('2026-11-03 09:30')))->toBeTrue();
 
-    $this->sm->rescheduleByStaff($b->fresh(), $this->staff, '2026-11-10', '10:00', 'Moved back', true);
-    expect($b->fresh()->payment_hold_expires_at->equalTo(manila('2026-11-03 10:00')))->toBeTrue();
+    $this->sm->rescheduleByStaff($b->fresh(), $this->staff, '2026-11-10', '09:30', 'Moved back', true);
+    expect($b->fresh()->payment_hold_expires_at->equalTo(manila('2026-11-03 09:30')))->toBeTrue();
 });
 
 test('an owner reschedule keeps a shorter existing hold', function () {
@@ -125,13 +125,13 @@ test('an owner reschedule keeps a shorter existing hold', function () {
         'form_data' => formDataFixture('wedding/valid-basic', $owner->id),
     ]);
 
-    $this->sm->reschedule($b, $owner, '2027-02-03', '10:00');
+    $this->sm->reschedule($b, $owner, '2027-02-03', '09:30');
 
     expect($b->fresh()->payment_hold_expires_at->equalTo(now()->addHours(30)))->toBeTrue();
 });
 
 test('the expiry job cancels a capped hold at its deadline', function () {
-    $b = counterWedding($this->staff, '2026-11-03', '10:00');
+    $b = counterWedding($this->staff, '2026-11-03', '09:30');
     $this->artisan('bookings:expire-holds')->assertSuccessful();
     expect($b->fresh()->status->value)->toBe('submitted');
 

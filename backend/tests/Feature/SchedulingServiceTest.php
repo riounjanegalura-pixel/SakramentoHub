@@ -59,11 +59,9 @@ test('Good Friday blocks a wedding', function () {
     expect($this->scheduling->dayRuleViolation(req('wedding', '2027-03-26')))->toBe('Unavailable: Good Friday.');
 });
 
-test('free starts span working hours in 30 minute steps', function () {
+test('free starts are offered one after another across working hours', function () {
     $starts = $this->scheduling->freeStarts(req('funeral', '2026-11-03'));
-    expect($starts[0])->toBe('08:00')
-        ->and(end($starts))->toBe('16:00')
-        ->and($starts)->toHaveCount(14); // no start in or through the 12:00 to 13:00 lunch
+    expect($starts)->toBe(['08:00', '09:00', '10:00', '11:00', '13:00', '14:00', '15:00', '16:00']); // 60 minute visits, none in or through the 12:00 to 13:00 lunch
 });
 
 test('same-day starts begin at least an hour from now', function () {
@@ -82,8 +80,9 @@ test('off-site rites add a 30 minute travel buffer', function () {
     held('funeral', '2026-11-05', '10:00', '11:00');
     $starts = $this->scheduling->freeStarts(req('house-blessing', '2026-11-05'));
 
-    expect($starts)->toContain('08:30')->toContain('13:00')
-        ->not->toContain('09:00')->not->toContain('11:00');
+    // 45 minute blessings: 08:45 ends 09:30 and its 30 minute travel buffer ends exactly when the funeral starts.
+    expect($starts)->toContain('08:45')->toContain('13:00')
+        ->not->toContain('09:30')->not->toContain('11:00');
 });
 
 test('a house funeral Mass is treated as off-site', function () {
@@ -93,7 +92,7 @@ test('a house funeral Mass is treated as off-site', function () {
 
 test('a parish Mass blocks the priest', function () {
     ParishEvent::create([
-        'title' => 'Noon Mass', 'date' => '2026-11-03 12:00:00', 'location' => 'Parish church',
+        'title' => 'Noon Mass', 'date' => \Illuminate\Support\Carbon::parse('2026-11-03 12:00', 'Asia/Manila')->utc(), 'location' => 'Parish church',
         'category' => 'mass', 'duration_minutes' => 60,
     ]);
     $starts = $this->scheduling->freeStarts(req('funeral', '2026-11-03'));

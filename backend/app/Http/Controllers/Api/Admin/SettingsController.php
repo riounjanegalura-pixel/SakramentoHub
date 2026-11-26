@@ -24,6 +24,8 @@ class SettingsController extends Controller
         'lunchStart' => 'lunch_start', 'lunchEnd' => 'lunch_end',
         'slotStepMinutes' => 'slot_step_minutes', 'travelBufferMinutes' => 'travel_buffer_minutes',
         'priestTitle' => 'priest_title', 'priestSignature' => 'priest_signature',
+        'officeDays' => 'office_days', 'parishEmail' => 'parish_email',
+        'slotGapMinutes' => 'slot_gap_minutes', 'massBufferMinutes' => 'mass_buffer_minutes', 'massSchedule' => 'mass_schedule',
     ];
 
     /** API key => services column. */
@@ -48,6 +50,31 @@ class SettingsController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Each Mass row is kept in one shape, and one with no day at all is refused: it would never close anything.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @return list<array{label: string, time: string, durationMinutes: int, weekdays: list<int>, firstFriday: bool}>
+     */
+    private function normalMasses(array $rows): array
+    {
+        $out = [];
+        foreach (array_values($rows) as $i => $row) {
+            $days = array_map('intval', $row['weekdays']);
+            sort($days);
+            $first = (bool) $row['firstFriday'];
+            if (! $first && $days === []) {
+                throw ValidationException::withMessages(["massSchedule.{$i}.weekdays" => 'Choose at least one day, or the first Friday.']);
+            }
+            $out[] = [
+                'label' => trim((string) $row['label']), 'time' => $row['time'], 'durationMinutes' => (int) $row['durationMinutes'],
+                'weekdays' => $first ? [] : $days, 'firstFriday' => $first,
+            ];
+        }
+
+        return $out;
     }
 
     private function parish(): array
@@ -97,6 +124,19 @@ class SettingsController extends Controller
             'slotStepMinutes' => ['sometimes', 'integer', 'in:15,30,60'],
             'travelBufferMinutes' => ['sometimes', 'integer', 'min:0', 'max:120'],
             'priestTitle' => ['sometimes', 'string', 'min:3', 'max:80'],
+            'officeDays' => ['sometimes', 'array', 'min:1', 'max:7'],
+            'officeDays.*' => ['integer', 'between:1,7', 'distinct'],
+            // Null clears the email, so nothing is shown rather than a stale address.
+            'parishEmail' => ['sometimes', 'nullable', 'email', 'max:120'],
+            'slotGapMinutes' => ['sometimes', 'integer', 'between:0,60'],
+            'massBufferMinutes' => ['sometimes', 'integer', 'between:0,120'],
+            'massSchedule' => ['sometimes', 'array', 'max:40'],
+            'massSchedule.*.label' => ['required', 'string', 'min:1', 'max:60'],
+            'massSchedule.*.time' => ['required', 'date_format:H:i'],
+            'massSchedule.*.durationMinutes' => ['required', 'integer', 'between:15,240'],
+            'massSchedule.*.weekdays' => ['present', 'array'],
+            'massSchedule.*.weekdays.*' => ['integer', 'between:1,7', 'distinct'],
+            'massSchedule.*.firstFriday' => ['required', 'boolean'],
             // A PNG or JPEG data URL, or null to remove it; the image itself is checked below by decoding it.
             'priestSignature' => ['sometimes', 'nullable', 'string', 'max:'.SignatureImage::MAX_DATA_URL_LENGTH],
         ], [
@@ -112,13 +152,22 @@ class SettingsController extends Controller
             }
         }
 
-        foreach (['slotStepMinutes', 'travelBufferMinutes'] as $k) {
+        $numbers = ['slotStepMinutes', 'travelBufferMinutes', 'slotGapMinutes', 'massBufferMinutes'];
+        foreach ($numbers as $k) {
             if (array_key_exists($k, $data)) {
                 $data[$k] = (int) $data[$k];
             }
         }
+        if (array_key_exists('massSchedule', $data)) {
+            $data['massSchedule'] = $this->normalMasses($data['massSchedule']);
+        }
+        if (array_key_exists('officeDays', $data)) {
+            $days = array_map('intval', $data['officeDays']);
+            sort($days);
+            $data['officeDays'] = $days;
+        }
         $before = $this->parish();
-        foreach (['slotStepMinutes', 'travelBufferMinutes'] as $k) {
+        foreach ($numbers as $k) {
             $before[$k] = $before[$k] === null ? null : (int) $before[$k];
         }
         $start = $data['workingHoursStart'] ?? $before['workingHoursStart'];

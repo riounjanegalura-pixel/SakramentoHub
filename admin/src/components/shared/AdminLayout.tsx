@@ -142,7 +142,7 @@ function Frame({ title, actions, children, titleRef, actionsRef }: {
     ))
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper md:flex-row print:block print:bg-surface">
+    <div className="flex min-h-dvh flex-col bg-paper md:flex-row print:block print:bg-surface">
       <a
         href="#main"
         className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:left-4 focus-visible:top-4 focus-visible:z-50 focus-visible:rounded-lg focus-visible:bg-surface focus-visible:px-4 focus-visible:py-2 focus-visible:text-body focus-visible:font-semibold focus-visible:text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus print:hidden"

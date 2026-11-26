@@ -63,12 +63,12 @@ describe('LoginScreen', () => {
     expect(password).toHaveAttribute('autocomplete', 'current-password')
   })
 
-  it('states Required in words and has a single filled primary button (navy, white text)', () => {
+  it('states Required in words and has a single filled primary button (gold, navy text)', () => {
     renderWithProviders()
     expect(screen.getAllByText('Required')).toHaveLength(2)
     const primary = screen.getByRole('button', { name: 'Sign in' })
     expect(primary).toHaveAttribute('data-variant', 'default')
-    expect(primary).toHaveClass('bg-navy', 'text-white')
+    expect(primary).toHaveClass('bg-gold', 'text-navy')
   })
 
   it('shows and hides the password with a named control', () => {

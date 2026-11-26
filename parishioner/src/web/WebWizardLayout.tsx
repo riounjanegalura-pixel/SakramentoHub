@@ -24,7 +24,7 @@ export function WebWizardLayout({ title, steps, current, onJump, onBack, childre
   const bookingId = useBookingStore((s) => s.bookingId)
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-dvh bg-paper">
       <TopNav />
       <main className="mx-auto max-w-4xl px-6 py-8">
         <div data-zone="steps" className="min-w-0">

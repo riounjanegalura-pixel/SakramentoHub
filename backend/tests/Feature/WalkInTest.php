@@ -80,7 +80,7 @@ test('a walk-in with no email goes from submit to certificate without an account
 // Review Focus 3: the fee path — payment link, payment, approval and notifications with no email and no account.
 test('a paying walk-in with no email gets a link, pays, and is approved without anyone to notify by account', function () {
     fakePayMongoCheckout();
-    $payload = walkInPayload($this->staff, 'wedding/valid-basic', ['appointmentDate' => '2027-03-03', 'appointmentStart' => '10:00']);
+    $payload = walkInPayload($this->staff, 'wedding/valid-basic', ['appointmentDate' => '2027-03-03', 'appointmentStart' => '09:30']);
     $id = $this->actingAs($this->staff)->postJson('/api/admin/walk-ins', $payload)->assertCreated()->json('id');
 
     $this->actingAs($this->staff)->patchJson("/api/admin/walk-ins/{$id}/submit")->assertOk()
@@ -140,7 +140,7 @@ test('walk-in submit cannot double-book the priest', function () {
 });
 
 test('lead time can be waived for a walk-in with a reason, and only by staff', function () {
-    $payload = walkInPayload($this->staff, 'house-blessing/valid-house', ['appointmentDate' => '2026-11-03', 'appointmentStart' => '10:00']);
+    $payload = walkInPayload($this->staff, 'house-blessing/valid-house', ['appointmentDate' => '2026-11-03', 'appointmentStart' => '10:15']);
     $id = $this->actingAs($this->staff)->postJson('/api/admin/walk-ins', $payload)->json('id');
 
     $this->actingAs($this->staff)->patchJson("/api/admin/walk-ins/{$id}/submit")->assertUnprocessable(); // 3-day lead time
@@ -153,7 +153,7 @@ test('lead time can be waived for a walk-in with a reason, and only by staff', f
 
 test('a waiver never lifts the other rules', function () {
     // 2026-11-08 is a Sunday: house blessings run Tuesday to Saturday.
-    $payload = walkInPayload($this->staff, 'house-blessing/valid-house', ['appointmentDate' => '2026-11-08', 'appointmentStart' => '10:00']);
+    $payload = walkInPayload($this->staff, 'house-blessing/valid-house', ['appointmentDate' => '2026-11-08', 'appointmentStart' => '10:15']);
     $id = $this->actingAs($this->staff)->postJson('/api/admin/walk-ins', $payload)->json('id');
     $this->actingAs($this->staff)->patchJson("/api/admin/walk-ins/{$id}/submit", ['waiveLeadTime' => true, 'waiveReason' => 'Urgent'])
         ->assertUnprocessable()->assertJsonPath('message', 'House Blessing & Other is not scheduled on Sundays.');
@@ -366,8 +366,8 @@ test('the availability range can ignore lead time for staff only', function () {
 
 test('a staff caller may exclude any booking from availability', function () {
     $owner = User::factory()->create();
-    $b = Booking::factory()->scheduled('2026-11-10', '10:00', '10:45')->create(['user_id' => $owner->id, 'sacrament' => 'house-blessing', 'status' => 'approved', 'payment_status' => 'not_required', 'is_offsite' => true]);
+    $b = Booking::factory()->scheduled('2026-11-10', '10:15', '11:00')->create(['user_id' => $owner->id, 'sacrament' => 'house-blessing', 'status' => 'approved', 'payment_status' => 'not_required', 'is_offsite' => true]);
     $q = "/api/services/house-blessing/availability?date=2026-11-10&excludeBookingId={$b->id}";
-    expect($this->actingAs($this->staff, 'sanctum')->getJson($q)->json('freeStarts'))->toContain('10:00');
-    expect($this->actingAs(User::factory()->create(), 'sanctum')->getJson($q)->json('freeStarts'))->not->toContain('10:00');
+    expect($this->actingAs($this->staff, 'sanctum')->getJson($q)->json('freeStarts'))->toContain('10:15');
+    expect($this->actingAs(User::factory()->create(), 'sanctum')->getJson($q)->json('freeStarts'))->not->toContain('10:15');
 });

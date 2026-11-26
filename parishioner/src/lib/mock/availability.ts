@@ -14,6 +14,19 @@ const LUNCH_END = 13 * 60
 const TRAVEL = 30
 const HOLDING = ['submitted', 'returned', 'approved', 'completed']
 const SESSION_MINUTES = 60
+/** Quiet minutes before and after every Mass (the backend's mass_buffer_minutes default). */
+const MASS_BUFFER = 15
+
+/** The parish's posted weekly Masses (the backend's mass_schedule default): ISO weekdays and start times; first-Friday rows only on that day. */
+const MASSES: ReadonlyArray<{ weekdays: number[]; firstFriday?: boolean; time: string }> = [
+  { weekdays: [2, 3, 4, 5], time: '17:30' },
+  { weekdays: [6], time: '07:00' },
+  { weekdays: [7], time: '06:30' },
+  { weekdays: [7], time: '08:00' },
+  { weekdays: [7], time: '17:00' },
+  { weekdays: [], firstFriday: true, time: '06:30' },
+  { weekdays: [], firstFriday: true, time: '07:30' },
+]
 
 /** Mirrors Booking::scopeHoldingSlot: an unpaid booking past its hold and a returned booking past 7 days stop blocking. */
 function holdsSlot(b: Booking): boolean {
@@ -100,9 +113,28 @@ function baseDayStatus(sacrament: Sacrament, date: string, ctx: ScheduleContext,
     }
   }
 
+  const day = Number(date.slice(8, 10))
+  const firstFriday = isoWeekday(date) === 5 && day <= 7
+  for (const mass of MASSES) {
+    if (mass.firstFriday ? firstFriday : mass.weekdays.includes(isoWeekday(date))) {
+      const start = toMin(mass.time)
+      blocked.push([Math.max(0, start - MASS_BUFFER), start + 60 + MASS_BUFFER] as const)
+    }
+  }
+
   const pad = isOffsite(sacrament, ctx.massType) ? TRAVEL : 0
+  // Visits are offered one after another (as the backend does): the next start is this visit's end, so no two overlap,
+  // and a visit that would run into lunch starts when lunch ends instead.
   const possible: string[] = []
-  for (let m = OPEN; m + service.durationMinutes <= CLOSE; m += STEP) if (m >= earliest && !(m < LUNCH_END && LUNCH_START < m + service.durationMinutes)) possible.push(toTime(m))
+  const stride = Math.max(STEP, service.durationMinutes)
+  for (let m = OPEN; m + service.durationMinutes <= CLOSE; ) {
+    if (m < LUNCH_END && LUNCH_START < m + service.durationMinutes) {
+      m = LUNCH_END
+      continue
+    }
+    if (m >= earliest) possible.push(toTime(m))
+    m += stride
+  }
   const free = possible.filter((t) => {
     const s = toMin(t) - pad
     const e = toMin(t) + service.durationMinutes + pad

@@ -60,9 +60,16 @@ function approvedElsewhere(string $sacrament, string $date, string $start, strin
     ], $extra));
 }
 
+/**
+ * A house blessing held at 10:30 on a Tuesday. Visits are now offered back to back (10:15 is on the grid, 10:30 is not),
+ * so it is submitted at 10:15 and then moved to 10:30: the off-grid hold these tests are about, as a rule change leaves it.
+ */
 function houseBlessingAt1030(): Booking
 {
-    return submittedHeldSlot(test()->owner, 'house-blessing', 'house-blessing/valid-house', '2026-11-10', '10:30'); // Tue
+    $b = submittedHeldSlot(test()->owner, 'house-blessing', 'house-blessing/valid-house', '2026-11-10', '10:15'); // Tue
+    $b->update(['appointment_start' => '10:30', 'appointment_end' => '11:15']);
+
+    return $b->fresh();
 }
 
 test('a held off-grid start can still be approved after the slot step changes', function () {
@@ -144,7 +151,7 @@ test('approval counts the travel buffer of an offsite held slot', function () {
 test('approval of an off-grid held slot is refused when a Mass overlaps it', function () {
     $b = houseBlessingAt1030();
     ParishSetting::put('slot_step_minutes', 60);
-    ParishEvent::create(['title' => 'Weekday Mass', 'date' => '2026-11-10 10:00:00', 'location' => 'Parish church', 'category' => 'mass', 'duration_minutes' => 60]);
+    ParishEvent::create(['title' => 'Weekday Mass', 'date' => Carbon::parse('2026-11-10 10:00', 'Asia/Manila')->utc(), 'location' => 'Parish church', 'category' => 'mass', 'duration_minutes' => 60]);
 
     expect(fn () => $this->sm->approve($b, $this->staff))
         ->toThrow(BookingRuleViolation::class, 'Cannot approve: That time is no longer available.');
@@ -160,7 +167,8 @@ test('approval of an off-grid held slot is refused when a blackout date is added
 });
 
 test('approval of an off-grid held slot is refused when daily capacity is exceeded', function () {
-    $b = submittedHeldSlot($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:30');
+    $b = submittedHeldSlot($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30');
+    $b->update(['appointment_start' => '10:30', 'appointment_end' => '12:00']); // off the back-to-back grid, as a rule change leaves it
     ParishSetting::put('slot_step_minutes', 60);
     approvedElsewhere('wedding', '2027-02-02', '13:00', '14:30');
     approvedElsewhere('wedding', '2027-02-02', '15:00', '16:30');

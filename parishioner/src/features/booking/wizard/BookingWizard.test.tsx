@@ -101,15 +101,15 @@ describe('BookingWizard (house blessing)', () => {
     const enabled = days.filter((d) => !d.hasAttribute('disabled'))
     await user.click(enabled[enabled.length - 1])
     await user.click(await screen.findByRole('radio', { name: '10:00 AM' }))
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     expect(await screen.findByRole('heading', { name: /who is this booking for/i })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     await screen.findByRole('heading', { name: /what will be blessed/i })
     await user.click(screen.getByRole('radio', { name: /vehicle/i }))
     await user.type(screen.getByLabelText(/plate number/i), 'NBC 1234')
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     await screen.findByRole('heading', { name: /review your booking/i })
     expect(screen.getByText('NBC 1234')).toBeInTheDocument()
@@ -126,7 +126,7 @@ describe('BookingWizard (house blessing)', () => {
     renderWizard('/booking/house-blessing/3')
 
     await screen.findByRole('heading', { name: /what will be blessed/i })
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     // Under the field and as a link in the error summary.
     expect((await screen.findAllByText('Choose what will be blessed')).length).toBeGreaterThan(0)
   })
@@ -248,7 +248,7 @@ describe('BookingWizard (house blessing)', () => {
     await waitFor(() => expect(fetchAvailabilityDays).toHaveBeenCalled())
     expect(vi.mocked(fetchDayAvailability).mock.calls[0][3]).toBe('r1')
     expect(vi.mocked(fetchAvailabilityDays).mock.calls[0][4]).toBe('r1')
-    expect(screen.getByRole('button', { name: /continue/i })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /^next$/i })).toBeEnabled()
   })
 
   it("the schedule step excludes the draft's own saved booking, and nothing for a brand-new draft", async () => {

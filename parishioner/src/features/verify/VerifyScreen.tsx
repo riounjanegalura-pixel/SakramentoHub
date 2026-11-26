@@ -156,7 +156,7 @@ export function VerifyScreen() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col gap-6 bg-paper px-4 py-8 lg:min-h-0 lg:max-w-none lg:bg-transparent lg:px-0">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col gap-6 bg-paper px-4 py-8 lg:min-h-0 lg:max-w-none lg:bg-transparent lg:px-0">
       <header className="lg:text-center">
         <Link to="/" className={`inline-flex min-h-11 items-center font-display text-heading font-semibold text-navy lg:hidden ${FOCUS}`}>SakramentoHub</Link>
         <h1 className="mt-4 font-display text-display font-semibold text-navy">Check a certificate</h1>

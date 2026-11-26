@@ -58,7 +58,10 @@ describe('BookingWizard (baptism parents): hidden answers', () => {
 
     await user.click(await screen.findByLabelText("Leave out the father's details"))
     await user.selectOptions(await screen.findByLabelText(/^Reason/), 'Estranged / uncontactable')
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    // Next walks the tabs (Father, Mother, Family residence); the answers reach the draft when the step is left.
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     await waitFor(() => expect(useBookingStore.getState().formData.fatherOmitted).toBe(true))
     const saved = JSON.parse(JSON.stringify(useBookingStore.getState().formData))
@@ -72,7 +75,7 @@ describe('BookingWizard (baptism parents): hidden answers', () => {
     const user = userEvent.setup()
     renderParentsStep()
 
-    await user.click(await screen.findByRole('button', { name: /continue/i }))
+    await user.click(await screen.findByRole('button', { name: /^next$/i }))
 
     await waitFor(() => expect(useBookingStore.getState().formData.motherFirstName).toBe('Maria'))
     const saved = useBookingStore.getState().formData

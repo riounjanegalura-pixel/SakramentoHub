@@ -35,7 +35,7 @@ test('every day in the range is listed, and bookings that hold a slot appear wit
 });
 
 test('masses and the baptism session are on the day, sorted by time', function () {
-    ParishEvent::create(['title' => 'Sunday Mass', 'date' => '2026-11-08 08:00:00', 'location' => 'Parish church', 'category' => 'mass', 'duration_minutes' => 60]);
+    ParishEvent::create(['title' => 'Sunday Mass', 'date' => \Illuminate\Support\Carbon::parse('2026-11-08 08:00', 'Asia/Manila')->utc(), 'location' => 'Parish church', 'category' => 'mass', 'duration_minutes' => 60]);
     Booking::factory()->scheduled('2026-11-08', '10:00', '11:00')->count(2)->create(['sacrament' => 'baptism', 'status' => 'approved', 'payment_status' => 'paid', 'form_data' => ['scheduleType' => 'regular']]);
 
     $items = scheduleDay($this->actingAs($this->staff)->getJson('/api/admin/schedule?start=2026-11-08&end=2026-11-08')->json(), '2026-11-08')['items'];

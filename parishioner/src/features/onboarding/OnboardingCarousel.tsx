@@ -35,7 +35,7 @@ export function OnboardingCarousel() {
 
   return (
     <AppShell showBottomNav={false}>
-      <div className="flex min-h-screen flex-col bg-paper">
+      <div className="flex min-h-dvh flex-col bg-paper">
         <header className="flex flex-col bg-navy px-6 pb-8 pt-6 text-white">
           <div className="flex items-center justify-between">
             <p className="font-display text-heading font-semibold">SakramentoHub</p>

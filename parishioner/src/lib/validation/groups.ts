@@ -100,7 +100,8 @@ export function sponsorShape(min: number, max: number, minAge: number): z.ZodRaw
     lastName: nameField('last name'),
     age: z.number({ error: 'Enter the age' }).int().min(minAge, `Must be at least ${minAge} years old`).max(120),
     religion: z.enum(RELIGIONS, { error: 'Select the religion' }),
-    residence: z.string({ error: 'Select at least the city/municipality' }).min(1, 'Select at least the city/municipality'),
+    // Optional: the office does not need a sponsor's address to record the sponsor.
+    residence: z.string().nullish(),
     residenceLine: z.string().max(255).nullish(),
   })
 

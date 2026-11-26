@@ -18,6 +18,8 @@ function makeEvent(overrides: Partial<AdminParishEvent> = {}): AdminParishEvent 
     location: 'Main Chapel',
     imageUrl: '/mock-assets/sunday-mass.jpg',
     category: 'mass',
+    durationMinutes: 60,
+    blocksBookings: true,
     createdBy: 'staff-1',
     createdByName: 'Staff One',
     createdAt: '2026-09-05T00:00:00.000Z',
@@ -112,6 +114,61 @@ describe('ParishEventsScreen', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Recollection Day').length).toBeGreaterThan(0)
     })
+  })
+
+  it('sends how long the event runs and whether it closes the calendar, closing it for an hour by default', async () => {
+    const fetchSpy = vi.spyOn(parishEventsData, 'fetchParishEvents').mockResolvedValue(makePage([]))
+    const createSpy = vi.spyOn(parishEventsData, 'createParishEvent').mockResolvedValue(makeEvent())
+    renderScreen()
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }))
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Parish assembly' } })
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: '2026-11-29' } })
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '08:00' } })
+    expect(screen.getByLabelText(/^Length/)).toHaveValue(60)
+    expect(screen.getByRole('checkbox', { name: /Closes this time/ })).toBeChecked()
+
+    fireEvent.change(screen.getByLabelText(/^Length/), { target: { value: '120' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }))
+
+    await waitFor(() =>
+      expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ durationMinutes: 120, blocksBookings: true }), expect.anything()),
+    )
+  })
+
+  it('lets the office leave the calendar open for an event, and checks the length', async () => {
+    const fetchSpy = vi.spyOn(parishEventsData, 'fetchParishEvents').mockResolvedValue(makePage([]))
+    const createSpy = vi.spyOn(parishEventsData, 'createParishEvent').mockResolvedValue(makeEvent())
+    renderScreen()
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalled())
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }))
+    fireEvent.change(screen.getByLabelText(/^Title/), { target: { value: 'Notice' } })
+    fireEvent.change(screen.getByLabelText(/^Date/), { target: { value: '2026-11-29' } })
+    fireEvent.change(screen.getByLabelText(/^Time/), { target: { value: '08:00' } })
+    fireEvent.change(screen.getByLabelText(/^Length/), { target: { value: '5' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }))
+    expect(await screen.findByText(/between 15 and 720 minutes/)).toBeInTheDocument()
+    expect(createSpy).not.toHaveBeenCalled()
+
+    fireEvent.change(screen.getByLabelText(/^Length/), { target: { value: '30' } })
+    fireEvent.click(screen.getByRole('checkbox', { name: /Closes this time/ }))
+    fireEvent.click(screen.getByRole('button', { name: 'Add event' }))
+    await waitFor(() =>
+      expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ durationMinutes: 30, blocksBookings: false }), expect.anything()),
+    )
+  })
+
+  it('shows on the list that an event closes bookings, and for how long', async () => {
+    vi.spyOn(parishEventsData, 'fetchParishEvents').mockResolvedValue(makePage([
+      makeEvent({ id: 'e1', title: 'Parish assembly', category: 'general', durationMinutes: 120, blocksBookings: true }),
+      makeEvent({ id: 'e2', title: 'Bulletin notice', category: 'general', durationMinutes: 60, blocksBookings: false }),
+    ]))
+    renderScreen()
+
+    expect(await screen.findByText(/Closes bookings for 120 min/)).toBeInTheDocument()
+    expect(screen.queryAllByText(/Closes bookings for 60 min/)).toHaveLength(0)
   })
 
   it('shows the real backend error when creating an event fails', async () => {

@@ -104,7 +104,7 @@ describe('BookingWizard (anointing, urgent path)', () => {
     const view = renderWizard('/booking/anointing/2')
 
     await user.click(await screen.findByLabelText(/yes, urgent/i))
-    await user.click(screen.getByRole('button', { name: /^continue$/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     expect(await screen.findByText(/call the parish now/i)).toBeInTheDocument()
     expect(useBookingStore.getState().formData.inDangerOfDeath).toBe(true)
@@ -128,7 +128,7 @@ describe('BookingWizard (anointing, urgent path)', () => {
       renderWizard('/booking/anointing/2')
       await user.click(await screen.findByLabelText(/yes, urgent/i))
       if (typed) await user.type(await screen.findByLabelText(/mobile number we can call/i), typed)
-      await user.click(screen.getByRole('button', { name: /^continue$/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
     }
 
     it('asks for one when the profile has no valid mobile and none is given', async () => {

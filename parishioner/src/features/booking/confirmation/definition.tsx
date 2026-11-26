@@ -48,9 +48,10 @@ const familyStep: WizardStep = {
         <h2 className="mb-4 border-t-2 border-navy pt-3 font-display text-[1.375rem] leading-[1.3] font-semibold text-ink">Parents</h2>
         <SectionTabs
           label="Parents"
+          form={form}
           tabs={[
-            { id: 'father', label: 'Father', hasError: errorKeys.some((k) => k.startsWith('father')), content: <PersonFields form={form} prefix="father" legend="Father" options={{ fixedSex: 'male' }} /> },
-            { id: 'mother', label: 'Mother', hasError: errorKeys.some((k) => k.startsWith('mother')), content: <PersonFields form={form} prefix="mother" legend="Mother" options={{ fixedSex: 'female' }} lastNameLabel="Maiden last name" /> },
+            { id: 'father', label: 'Father', owns: (k) => k.startsWith('father'), hasError: errorKeys.some((k) => k.startsWith('father')), content: <PersonFields form={form} prefix="father" legend="Father" options={{ fixedSex: 'male' }} /> },
+            { id: 'mother', label: 'Mother', owns: (k) => k.startsWith('mother'), hasError: errorKeys.some((k) => k.startsWith('mother')), content: <PersonFields form={form} prefix="mother" legend="Mother" options={{ fixedSex: 'female' }} lastNameLabel="Maiden last name" /> },
           ]}
         />
       </StepFrame>
@@ -99,7 +100,7 @@ export const confirmationWizard: WizardDefinition = {
       minAge: 16,
       eligibility: 'all',
       title: 'Sponsor',
-      hint: 'One sponsor, at least 16, Roman Catholic, and not your parent.',
+      hint: 'One sponsor, at least 16, and not your parent.',
       extraRefine: (d, ctx) => {
         const s = Array.isArray(d.sponsors) ? (d.sponsors[0] as { firstName?: string; lastName?: string } | undefined) : undefined
         if (!s || !normName(s.firstName, s.lastName)) return

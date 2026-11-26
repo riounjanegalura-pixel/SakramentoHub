@@ -20,24 +20,20 @@ const PERSON = (p: string) => [`${p}FirstName`, `${p}MiddleName`, `${p}LastName`
 
 describe('clears: baptism', () => {
   it('drops the father details and keeps the reason once the father is left out', () => {
-    const keys = clearsOf(baptismWizard, 'parents', { fatherOmitted: true, motherOmitted: false })
+    const keys = clearsOf(baptismWizard, 'parents', { fatherOmitted: true })
     expect(keys).toEqual(expect.arrayContaining(PERSON('father')))
     expect(keys).not.toContain('fatherOmittedReason')
-    expect(keys).toContain('motherOmittedReason')
-    expect(keys.some((k) => k.startsWith('mother') && k !== 'motherOmittedReason')).toBe(false)
   })
 
-  it('drops the mother details and keeps the reason once the mother is left out', () => {
+  it('never drops the mother details, even from an older draft that left her out; only the retired answer goes', () => {
     const keys = clearsOf(baptismWizard, 'parents', { fatherOmitted: false, motherOmitted: true })
-    expect(keys).toEqual(expect.arrayContaining(PERSON('mother')))
-    expect(keys).not.toContain('motherOmittedReason')
-    expect(keys).toContain('fatherOmittedReason')
+    expect(keys.some((k) => PERSON('mother').includes(k))).toBe(false)
+    expect(keys).toEqual(expect.arrayContaining(['motherOmitted', 'motherOmittedReason']))
   })
 
-  it('keeps every parent answer while both are included, and never touches the family residence', () => {
-    const keys = clearsOf(baptismWizard, 'parents', { fatherOmitted: false, motherOmitted: false })
-    expect(keys.some((k) => /^(father|mother)(?!OmittedReason)/.test(k))).toBe(false)
-    expect(keys).toEqual(['fatherOmittedReason', 'motherOmittedReason'])
+  it('keeps every parent answer while the father is included, and never touches the family residence', () => {
+    const keys = clearsOf(baptismWizard, 'parents', { fatherOmitted: false })
+    expect(keys).toEqual(['fatherOmittedReason', 'motherOmitted', 'motherOmittedReason'])
     expect(keys.some((k) => k.startsWith('parentsResidence'))).toBe(false)
   })
 

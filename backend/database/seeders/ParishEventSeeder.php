@@ -36,6 +36,8 @@ class ParishEventSeeder extends Seeder
             'location' => 'Baptistery',
             'image_url' => '/mock-assets/baptism.jpg',
             'category' => 'baptism',
+            // An announcement of a baptism that is already a booking: it must not also close the calendar.
+            'blocks_bookings' => false,
         ]);
     }
 }

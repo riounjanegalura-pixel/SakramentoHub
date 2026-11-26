@@ -25,6 +25,29 @@ describe('useAuthStore.logout', () => {
     expect(useAuthStore.getState().user).toBeNull()
   })
 
+  it('throws away an unfinished booking, so the next person on a shared computer does not find it', async () => {
+    const { useBookingStore } = await import('./booking-store')
+    useBookingStore.getState().startBooking('baptism')
+    useBookingStore.getState().updateFormData({ childFirstName: 'Rio' })
+
+    await useAuthStore.getState().logout()
+
+    expect(useBookingStore.getState().formData).toEqual({})
+    expect(localStorage.getItem('sakramentohub_booking_draft')).toBeNull()
+  })
+
+  it('signing in claims the unfinished booking, or drops it when it belonged to someone else', async () => {
+    const { useBookingStore } = await import('./booking-store')
+    useBookingStore.getState().startBooking('baptism')
+    useBookingStore.getState().updateFormData({ childFirstName: 'Rio' })
+
+    useAuthStore.getState().setUser({ id: '1', fullName: 'Rio', email: 'r@x.com', phone: '', address: '' })
+    expect(useBookingStore.getState().formData).toEqual({ childFirstName: 'Rio' })
+
+    useAuthStore.getState().setUser({ id: '2', fullName: 'Ana', email: 'a@x.com', phone: '', address: '' })
+    expect(useBookingStore.getState().formData).toEqual({})
+  })
+
   it('clears the query cache so the next person on a shared computer sees none of it', async () => {
     queryClient.setQueryData(['notifications'], [{ id: 'n1' }])
     await useAuthStore.getState().logout()

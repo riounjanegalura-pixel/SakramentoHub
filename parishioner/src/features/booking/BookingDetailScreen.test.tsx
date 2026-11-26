@@ -24,13 +24,17 @@ const fetchBooking = vi.fn()
 const cancelBooking = vi.fn()
 const rescheduleBooking = vi.fn()
 const fetchCertificateHtml = vi.fn()
+const attachLateDocument = vi.fn()
+const uploadDocument = vi.fn()
 const fetchDayAvailability = vi.fn()
 vi.mock('../../lib/data/bookings', () => ({
   fetchBooking: (...a: unknown[]) => fetchBooking(...a),
   cancelBooking: (...a: unknown[]) => cancelBooking(...a),
   rescheduleBooking: (...a: unknown[]) => rescheduleBooking(...a),
   fetchCertificateHtml: (...a: unknown[]) => fetchCertificateHtml(...a),
+  attachLateDocument: (...a: unknown[]) => attachLateDocument(...a),
 }))
+vi.mock('../../lib/data/documents', () => ({ uploadDocument: (...a: unknown[]) => uploadDocument(...a) }))
 vi.mock('../../lib/data/parish', () => ({
   fetchParishInfo: vi.fn(async () => ({ name: 'St. Peter', phone: '09123456789', priestName: 'Fr. X', workingHours: { start: '08:00', end: '17:00' } })),
 }))
@@ -357,9 +361,50 @@ describe('BookingDetailScreen', () => {
     expect(await screen.findByText(/needs a new file/i)).toBeInTheDocument()
     expect(screen.getByText(/blurry — please re-upload/i)).toBeInTheDocument()
 
-    await userEvent.click(screen.getByRole('button', { name: /upload a new file/i }))
+    expect(screen.getByLabelText(/replace file: death certificate/i)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /review and send it back/i }))
     expect(await screen.findByText('Wizard page')).toBeInTheDocument()
     expect(useBookingStore.getState().editingBookingId).toBe('b1')
+  })
+
+  it('replaces just the document the office sent back, right on the booking, and shows it waiting for review', async () => {
+    fetchBooking.mockResolvedValue({
+      ...base, status: 'returned',
+      documents: docs([{ review: { status: 'rejected', note: 'Blurry', reviewedAt: '2026-11-02T01:00:00Z' } }, { label: 'marriage contract', review: { status: 'accepted', note: null, reviewedAt: '2026-11-02T01:00:00Z' } }]),
+    })
+    uploadDocument.mockResolvedValue({ url: '/documents/u1/new.pdf' })
+    attachLateDocument.mockResolvedValue({
+      ...base, status: 'returned',
+      documents: docs([{ url: '/documents/u1/new.pdf', review: null }, { label: 'marriage contract', review: { status: 'accepted', note: null, reviewedAt: '2026-11-02T01:00:00Z' } }]),
+    })
+    renderDetail()
+
+    const file = new File(['x'], 'new.pdf', { type: 'application/pdf' })
+    await userEvent.upload(await screen.findByLabelText(/replace file: death certificate/i), file)
+
+    await waitFor(() => expect(attachLateDocument).toHaveBeenCalledWith('b1', 'doc0', '/documents/u1/new.pdf'))
+    expect(await screen.findByText('Waiting for review')).toBeInTheDocument()
+    expect(screen.getByText('Accepted')).toBeInTheDocument()
+    expect(screen.queryByText(/needs a new file/i)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText(/replace file/i)).not.toBeInTheDocument()
+  })
+
+  it('shows the real reason when the replacement is refused', async () => {
+    fetchBooking.mockResolvedValue({ ...base, status: 'returned', documents: docs([{ review: { status: 'rejected', note: 'Blurry', reviewedAt: '2026-11-02T01:00:00Z' } }]) })
+    uploadDocument.mockResolvedValue({ url: '/documents/u1/new.pdf' })
+    attachLateDocument.mockRejectedValue(new Error('A document can be replaced only while the booking is still open.'))
+    renderDetail()
+
+    await userEvent.upload(await screen.findByLabelText(/replace file/i), new File(['x'], 'new.pdf', { type: 'application/pdf' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('only while the booking is still open')
+  })
+
+  it('offers no replace button on a document that is accepted, waiting, or on a closed booking', async () => {
+    fetchBooking.mockResolvedValue({ ...base, status: 'completed', documents: docs([{ review: { status: 'rejected', note: 'Blurry', reviewedAt: '2026-11-02T01:00:00Z' } }]) })
+    renderDetail()
+    await screen.findByText(/needs a new file/i)
+    expect(screen.queryByLabelText(/replace file/i)).not.toBeInTheDocument()
   })
 
   it('tells the parishioner the office will ask for a new file when a document is rejected on a booking still under review', async () => {
@@ -369,8 +414,9 @@ describe('BookingDetailScreen', () => {
     })
     renderDetail()
     expect(await screen.findByText(/needs a new file/i)).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /upload a new file/i })).not.toBeInTheDocument()
-    expect(screen.getByText(/the parish office will ask you to upload a new file/i)).toBeInTheDocument()
+    // Still under review: the person can replace the file right away, without being asked first.
+    expect(screen.getByLabelText(/replace file: death certificate/i)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /review and send it back/i })).not.toBeInTheDocument()
   })
 
   it('shows waiting-for-review and not-uploaded documents', async () => {
@@ -514,12 +560,12 @@ describe('BookingDetailScreen', () => {
       await expectNoA11yViolations(container)
     })
 
-    it('keeps the primary action navy with white text', async () => {
+    it('keeps the primary action gold with navy text', async () => {
       const holdEnds = new Date(Date.now() + 24 * 3600 * 1000).toISOString()
       fetchBooking.mockResolvedValue({ ...base, sacrament: 'wedding', status: 'submitted', paymentStatus: 'unpaid', amountDueCentavos: 500000, paymentHoldExpiresAt: holdEnds })
       renderDetail()
       const pay = await screen.findByRole('button', { name: /pay with gcash/i })
-      expect(pay).toHaveClass('bg-navy', 'text-white')
+      expect(pay).toHaveClass('bg-gold', 'text-navy')
       expect(within(screen.getByRole('list', { name: 'Booking progress' })).getByText('Payment due')).toBeInTheDocument()
     })
   })

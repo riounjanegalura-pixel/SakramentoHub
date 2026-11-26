@@ -194,10 +194,10 @@ test('completing after check-in works the same as before', function () {
 test('moving the appointment, by the owner or by the office, clears the check-in of the old day', function () {
     $mine = passBooking(['checked_in_at' => now(), 'checked_in_by' => $this->staff->id], '2026-11-20');
     $sm = app(\App\Services\Booking\BookingStateMachine::class);
-    $sm->reschedule($mine, $this->user, '2026-11-24', '10:00');
+    $sm->reschedule($mine, $this->user, '2026-11-24', '10:15');
     expect($mine->fresh()->checked_in_at)->toBeNull()->and($mine->fresh()->checked_in_by)->toBeNull();
 
     $office = passBooking(['checked_in_at' => now(), 'checked_in_by' => $this->staff->id], '2026-11-25');
-    $sm->rescheduleByStaff($office, $this->staff, '2026-11-26', '10:00', 'Priest unavailable');
+    $sm->rescheduleByStaff($office, $this->staff, '2026-11-26', '10:15', 'Priest unavailable');
     expect($office->fresh()->checked_in_at)->toBeNull()->and($office->fresh()->checked_in_by)->toBeNull();
 });

@@ -21,7 +21,7 @@ export function WebAuthSplit({ children }: { children: ReactNode }) {
   const { data: parish } = useQuery({ queryKey: ['parish'], queryFn: fetchParishInfo })
 
   return (
-    <div className="grid min-h-screen bg-paper lg:grid-cols-2">
+    <div className="grid min-h-dvh bg-paper lg:grid-cols-2">
       <aside aria-label="About SakramentoHub" className="relative flex flex-col justify-center overflow-hidden border-r-[3px] border-gold bg-navy p-12 text-white">
         <img src={arch} alt="" aria-hidden="true" className="pointer-events-none absolute -bottom-6 -right-6 w-64 opacity-30" />
         <img src={crest} alt="" aria-hidden="true" className="mb-6 h-36 w-auto self-start" />

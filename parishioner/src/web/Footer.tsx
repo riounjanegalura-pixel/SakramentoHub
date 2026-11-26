@@ -2,12 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { fetchParishInfo } from '../lib/data/parish'
+import { officeHoursText } from '../lib/domain'
 import { DonateDialog } from '../components/shared/DonateDialog'
-
-function hours(t: string): string {
-  const [h, m] = t.split(':').map(Number)
-  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'}`
-}
 
 export function Footer() {
   const { data: parish } = useQuery({ queryKey: ['parish'], queryFn: fetchParishInfo })
@@ -21,7 +17,7 @@ export function Footer() {
             <>
               <p className="font-display text-heading font-semibold text-navy">{parish.name}</p>
               <p className="text-ink-muted">Parish office: <a href={`tel:${parish.phone}`} className="inline-flex min-h-11 items-center font-medium text-navy underline">{parish.phone}</a></p>
-              <p className="text-ink-muted">Open {hours(parish.workingHours.start)} – {hours(parish.workingHours.end)}</p>
+              <p className="text-ink-muted">Office hours: {officeHoursText(parish)}</p>
             </>
           )}
         </div>

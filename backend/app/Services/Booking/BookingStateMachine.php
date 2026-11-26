@@ -362,14 +362,24 @@ class BookingStateMachine
     {
         $old = null;
         $result = $this->locked($booking, function (Booking $b) use ($key, $fileUrl, $actor, &$old) {
-            if ($b->sacrament !== 'wedding') {
-                throw new BookingRuleViolation('Documents can be added later only to a wedding booking.');
-            }
-            if (! in_array($key, WeddingMilestones::LATE_KEYS, true)) {
-                throw new BookingRuleViolation('Only the marriage license, Pre-Cana, banns and confession documents can be added after the booking is submitted.');
-            }
-            if (! in_array($b->status, [S::Submitted, S::Approved], true)) {
-                throw new BookingRuleViolation('Documents can be added only while the booking is submitted or approved.');
+            // A document the office sent back can always be replaced, on any sacrament, while the booking is still open:
+            // the person must be able to fix exactly that file. Anything else is the wedding's later documents.
+            $current = collect($b->documentChecklist())->firstWhere('key', $key);
+            $sentBack = $current !== null && ($current['review']['status'] ?? null) === 'rejected';
+            if ($sentBack) {
+                if (! in_array($b->status, [S::Submitted, S::Approved, S::Returned], true)) {
+                    throw new BookingRuleViolation('A document can be replaced only while the booking is still open.');
+                }
+            } else {
+                if ($b->sacrament !== 'wedding') {
+                    throw new BookingRuleViolation('Documents can be added later only to a wedding booking.');
+                }
+                if (! in_array($key, WeddingMilestones::LATE_KEYS, true)) {
+                    throw new BookingRuleViolation('Only the marriage license, Pre-Cana, banns and confession documents can be added after the booking is submitted.');
+                }
+                if (! in_array($b->status, [S::Submitted, S::Approved], true)) {
+                    throw new BookingRuleViolation('Documents can be added only while the booking is submitted or approved.');
+                }
             }
 
             $data = (array) ($b->form_data ?? []);
@@ -378,9 +388,9 @@ class BookingStateMachine
             $data[$key] = $fileUrl; // a review of the earlier file no longer counts (Booking::documentChecklist)
             $b->update(['form_data' => $data]);
 
-            $label = collect(SacramentDocuments::catalogue('wedding'))->firstWhere('key', $key)['label'];
-            $this->audit->record($actor, 'document.attached_late', $b, ['documentKey' => $key, 'label' => $label, 'replaced' => $replaced]);
-            $this->notify->staff('Document added', "{$b->reference_number}: {$label} was uploaded and needs review.", $b);
+            $label = $current['label'] ?? collect(SacramentDocuments::catalogue($b->sacrament))->firstWhere('key', $key)['label'];
+            $this->audit->record($actor, $sentBack ? 'document.replaced' : 'document.attached_late', $b, ['documentKey' => $key, 'label' => $label, 'replaced' => $replaced]);
+            $this->notify->staff($sentBack ? 'Document replaced' : 'Document added', "{$b->reference_number}: {$label} was ".($sentBack ? 'replaced' : 'uploaded').' and needs review.', $b);
 
             return $b;
         });

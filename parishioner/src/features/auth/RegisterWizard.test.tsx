@@ -21,14 +21,14 @@ async function completeAllSteps() {
   fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Rio Dela Cruz' } })
   pickBirthDate(1990, 5, 1)
   fireEvent.change(screen.getByLabelText(/^sex/i), { target: { value: 'male' } })
-  fireEvent.click(screen.getByText('Continue'))
+  fireEvent.click(screen.getByText('Next'))
 
   await waitFor(() => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument()
   })
   fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'rio@example.com' } })
   fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '09171234567' } })
-  fireEvent.click(screen.getByText('Continue'))
+  fireEvent.click(screen.getByText('Next'))
 
   await waitFor(() => {
     expect(screen.getByLabelText(/^password/i)).toBeInTheDocument()
@@ -48,7 +48,7 @@ describe('RegisterWizard', () => {
   it('blocks advancing past step 1 with an invalid full name', async () => {
     renderWithProviders()
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'R' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await waitFor(() => {
       expect(screen.getByText('Enter your full name')).toBeInTheDocument()
     })
@@ -63,11 +63,11 @@ describe('RegisterWizard', () => {
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Rio Dela Cruz' } })
     pickBirthDate(1990, 5, 1)
     fireEvent.change(screen.getByLabelText(/^sex/i), { target: { value: 'male' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await waitFor(() => expect(screen.getByLabelText(/email/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'rio@example.com' } })
     fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '09171234567' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await waitFor(() => expect(screen.getByLabelText(/^password/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/^password/i), { target: { value: 'password123' } })
 
@@ -84,11 +84,11 @@ describe('RegisterWizard', () => {
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Rio Dela Cruz' } })
     pickBirthDate(1990, 5, 1)
     fireEvent.change(screen.getByLabelText(/^sex/i), { target: { value: 'male' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await waitFor(() => expect(screen.getByLabelText(/email/i)).toBeInTheDocument())
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'rio@example.com' } })
     fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '09171234567' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await waitFor(() => expect(screen.getByLabelText(/^password/i)).toBeInTheDocument())
 
     // Not a link to another page: leaving the form would throw away everything typed so far.
@@ -121,7 +121,7 @@ describe('RegisterWizard', () => {
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Rio Dela Cruz' } })
     pickBirthDate(1990, 5, 1)
     fireEvent.change(screen.getByLabelText(/^sex/i), { target: { value: 'male' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await screen.findByLabelText(/contact number/i)
   }
 
@@ -139,7 +139,7 @@ describe('RegisterWizard', () => {
     expect(email).toHaveAttribute('autocomplete', 'email')
     fireEvent.change(email, { target: { value: 'rio@example.com' } })
     fireEvent.change(phone, { target: { value: '09171234567' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     const password = await screen.findByLabelText(/^password/i)
     expect(password).toHaveAttribute('autocomplete', 'new-password')
   })
@@ -147,7 +147,7 @@ describe('RegisterWizard', () => {
   it('focuses the first invalid field and links its error', async () => {
     renderWithProviders()
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'R' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     const message = await screen.findByText('Enter your full name')
     const name = screen.getByLabelText(/full name/i)
     expect(name).toHaveAttribute('aria-invalid', 'true')
@@ -165,9 +165,9 @@ describe('RegisterWizard', () => {
     await expectNoA11yViolations(container)
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'rio@example.com' } })
     fireEvent.change(screen.getByLabelText(/contact number/i), { target: { value: '09171234567' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     await screen.findByLabelText(/^password/i)
-    expect(screen.getByRole('button', { name: 'Create Account' })).toHaveClass('bg-navy', 'text-white')
+    expect(screen.getByRole('button', { name: 'Create Account' })).toHaveClass('bg-gold', 'text-navy')
     await expectNoA11yViolations(container)
     fireEvent.click(screen.getByRole('button', { name: 'Create Account' }))
     await screen.findByText('You must agree to the Privacy Notice to create an account.')
@@ -177,7 +177,7 @@ describe('RegisterWizard', () => {
   it('asks for birth date and sex on the first step', async () => {
     renderWithProviders()
     fireEvent.change(screen.getByLabelText(/full name/i), { target: { value: 'Maria Clara Santos' } })
-    fireEvent.click(screen.getByText('Continue'))
+    fireEvent.click(screen.getByText('Next'))
     expect(await screen.findByText('Enter your date of birth')).toBeInTheDocument()
     expect(screen.getByText('Select your sex')).toBeInTheDocument()
   })

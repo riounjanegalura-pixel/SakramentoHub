@@ -36,9 +36,9 @@ class ScheduleController extends Controller
             ->whereDate('appointment_date', '<=', $end->toDateString())
             ->get()->groupBy(fn (Booking $b) => $b->appointmentDateString());
 
-        $masses = ParishEvent::where('category', 'mass')
-            ->whereDate('date', '>=', $start->toDateString())->whereDate('date', '<=', $end->toDateString())
-            ->get()->groupBy(fn ($m) => Carbon::parse($m->date)->toDateString());
+        // Every event that closes its time sits on the agenda, so the office sees why a time is not offered.
+        $masses = ParishEvent::where('blocks_bookings', true)->betweenParishDays($start->toDateString(), $end->toDateString())
+            ->get()->groupBy(fn (ParishEvent $m) => $m->parishTime()->toDateString());
 
         $sessionServices = Service::whereNotNull('session_times')->get();
         $names = Service::pluck('name', 'id');
@@ -51,9 +51,9 @@ class ScheduleController extends Controller
             $items = [];
 
             foreach ($masses->get($date, []) as $mass) {
-                $at = Carbon::parse($mass->date);
+                $at = $mass->parishTime();
                 $items[] = ['type' => 'mass', 'title' => $mass->title, 'start' => $at->format('H:i'),
-                    'end' => $at->copy()->addMinutes((int) ($mass->duration_minutes ?? 60))->format('H:i')];
+                    'end' => $at->addMinutes((int) ($mass->duration_minutes ?? 60))->format('H:i')];
             }
 
             $dayBookings = $bookings->get($date, collect());

@@ -17,7 +17,7 @@ const service = (o: Partial<AdminService> = {}): AdminService => ({
 })
 
 const settings = (): AdminSettings => ({
-  parish: { parishName: 'St. Peter the Apostle Parish', parishAddress: 'Balagtas, Bulacan', priestName: 'Rev. Fr. Leopoldo S. Evangelista', parishPhone: '09123456789', workingHoursStart: '08:00', workingHoursEnd: '17:00', lunchStart: '12:00', lunchEnd: '13:00', slotStepMinutes: 30, travelBufferMinutes: 30, priestTitle: 'Parish Priest', priestSignature: null },
+  parish: { parishName: 'St. Peter the Apostle Parish', parishAddress: 'Balagtas, Bulacan', priestName: 'Rev. Fr. Leopoldo S. Evangelista', parishPhone: '09123456789', workingHoursStart: '08:00', workingHoursEnd: '17:00', lunchStart: '12:00', lunchEnd: '13:00', slotStepMinutes: 30, travelBufferMinutes: 30, officeDays: [2, 3, 4, 5, 6], parishEmail: null, slotGapMinutes: 0, massBufferMinutes: 15, massSchedule: [{ label: 'Sunday Mass', time: '08:00', durationMinutes: 60, weekdays: [7], firstFriday: false }], priestTitle: 'Parish Priest', priestSignature: null },
   services: [
     service(),
     service({ id: 'baptism', name: 'Baptism', feeRule: 'per_sponsor', priceCentavos: 5000, leadTimeDays: 7, allowedWeekdays: [2, 3, 4, 5, 6], hasSessions: true, sessionWeekdays: [7], sessionTimes: ['10:00'], sessionCapacity: 10, sessionDurationMinutes: 60, sponsorFeeAllowed: true }),
@@ -129,6 +129,78 @@ describe('SettingsScreen', () => {
 
     await waitFor(() => expect(update).toHaveBeenCalledWith({ priestName: 'Rev. Fr. New Priest', slotStepMinutes: 60 }))
     expect(await screen.findByRole('status')).toHaveTextContent('Parish details saved.')
+  })
+
+  it('lets an admin set office days, email, the gap between visits and the Mass buffer', async () => {
+    signIn('admin')
+    const update = vi.spyOn(settingsData, 'updateParishSettings').mockResolvedValue(settings().parish)
+    renderWithProviders(<SettingsScreen />)
+
+    await userEvent.click(within(await screen.findByRole('group', { name: 'Office days' })).getByRole('checkbox', { name: 'Mon' }))
+    await userEvent.type(screen.getByLabelText('Email'), 'office@example.org')
+    await userEvent.click(within(screen.getByRole('radiogroup', { name: 'Gap between visits' })).getByRole('radio', { name: '15 min' }))
+    const buffer = screen.getByLabelText('Mass buffer')
+    await userEvent.clear(buffer)
+    await userEvent.type(buffer, '20')
+    await userEvent.click(screen.getByRole('button', { name: 'Save parish settings' }))
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({ officeDays: [1, 2, 3, 4, 5, 6], parishEmail: 'office@example.org', slotGapMinutes: 15, massBufferMinutes: 20 }),
+    )
+  })
+
+  it('lets an admin add, change and remove Masses', async () => {
+    signIn('admin')
+    const update = vi.spyOn(settingsData, 'updateParishSettings').mockResolvedValue(settings().parish)
+    renderWithProviders(<SettingsScreen />)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Add a Mass' }))
+    const second = within(screen.getByRole('group', { name: 'Mass 2' }))
+    await userEvent.clear(second.getByLabelText('Name'))
+    await userEvent.type(second.getByLabelText('Name'), 'Vigil Mass')
+    await userEvent.click(within(second.getByRole('group', { name: 'Days' })).getByRole('checkbox', { name: 'Sat' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Save parish settings' }))
+
+    await waitFor(() =>
+      expect(update).toHaveBeenCalledWith({
+        massSchedule: [
+          { label: 'Sunday Mass', time: '08:00', durationMinutes: 60, weekdays: [7], firstFriday: false },
+          { label: 'Vigil Mass', time: '06:00', durationMinutes: 60, weekdays: [6, 7], firstFriday: false },
+        ],
+      }),
+    )
+  })
+
+  it('removes a Mass and tells the admin when a Mass has no day', async () => {
+    signIn('admin')
+    const update = vi.spyOn(settingsData, 'updateParishSettings').mockResolvedValue(settings().parish)
+    renderWithProviders(<SettingsScreen />)
+
+    const first = within(await screen.findByRole('group', { name: 'Mass 1' }))
+    await userEvent.click(within(first.getByRole('group', { name: 'Days' })).getByRole('checkbox', { name: 'Sun' }))
+    expect(first.getByRole('alert')).toHaveTextContent('Choose at least one day')
+
+    await userEvent.click(screen.getByRole('button', { name: 'Remove Mass 1' }))
+    expect(screen.getByText(/No Mass times yet/)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Save parish settings' }))
+    await waitFor(() => expect(update).toHaveBeenCalledWith({ massSchedule: [] }))
+  })
+
+  it('says what is wrong with a Mass that has no start time or an impossible length, before the server has to', async () => {
+    signIn('admin')
+    renderWithProviders(<SettingsScreen />)
+
+    const first = within(await screen.findByRole('group', { name: 'Mass 1' }))
+    fireEvent.change(first.getByLabelText('Minutes'), { target: { value: '5' } })
+    expect(first.getByText('A Mass lasts between 15 and 240 minutes.')).toBeInTheDocument()
+    fireEvent.change(first.getByLabelText('Starts'), { target: { value: '' } })
+    expect(first.getByText('Choose the time this Mass starts.')).toBeInTheDocument()
+  })
+
+  it('does not call an untouched office-days list a change', async () => {
+    signIn('admin')
+    renderWithProviders(<SettingsScreen />)
+    expect(await screen.findByRole('button', { name: 'Save parish settings' })).toBeDisabled()
   })
 
   it('lets an admin change the title printed under the priest name', async () => {

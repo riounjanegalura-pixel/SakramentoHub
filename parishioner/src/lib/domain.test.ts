@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { peso, formatTime, formatDate, addDaysYmd, parishToday, pastChangeCutoff, STATUS_LABEL, SACRAMENT_LABEL, holdLapsed, needsAction, PAYMENT_LABEL, EVENT_CATEGORY_LABEL, eventCategoryLabel } from './domain'
+import { peso, formatTime, formatDate, addDaysYmd, officeHoursText, parishToday, pastChangeCutoff, STATUS_LABEL, SACRAMENT_LABEL, holdLapsed, needsAction, PAYMENT_LABEL, EVENT_CATEGORY_LABEL, eventCategoryLabel } from './domain'
 
 describe('holdLapsed', () => {
   const past = new Date(Date.now() - 3600_000).toISOString()
@@ -90,5 +90,21 @@ describe('event category labels', () => {
   it('shows an unknown category as-is', () => {
     expect(eventCategoryLabel('feast')).toBe('Feast day')
     expect(eventCategoryLabel('mystery')).toBe('mystery')
+  })
+})
+
+describe('officeHoursText', () => {
+  const base = { name: 'P', phone: '0', priestName: 'F', workingHours: { start: '08:00', end: '17:00' } }
+  it('writes a run of days as a range', () => {
+    expect(officeHoursText({ ...base, officeDays: [2, 3, 4, 5, 6] })).toBe('Tuesday to Saturday, 8:00 AM to 5:00 PM')
+  })
+  it('lists days that are not one run', () => {
+    expect(officeHoursText({ ...base, officeDays: [1, 3, 5] })).toBe('Monday, Wednesday and Friday, 8:00 AM to 5:00 PM')
+  })
+  it('names a single day', () => {
+    expect(officeHoursText({ ...base, officeDays: [6] })).toBe('Saturday, 8:00 AM to 5:00 PM')
+  })
+  it('gives the hours alone when the parish has no days on file', () => {
+    expect(officeHoursText(base)).toBe('8:00 AM to 5:00 PM')
   })
 })

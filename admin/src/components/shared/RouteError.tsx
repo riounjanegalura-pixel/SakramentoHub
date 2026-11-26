@@ -12,7 +12,7 @@ function isChunkError(error: unknown): boolean {
 export function RouteError() {
   const stale = isChunkError(useRouteError())
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-surface p-6 text-center">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-surface p-6 text-center">
       <h1 className="text-xl font-bold text-ink">
         {stale ? 'This page could not load' : 'Something went wrong'}
       </h1>

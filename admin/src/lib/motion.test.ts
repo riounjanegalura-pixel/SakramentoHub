@@ -14,7 +14,7 @@ describe('motion tokens', () => {
   })
 
   it('press is a 0.98 scale over 120 ms', () => {
-    expect(press).toEqual({ scale: 0.98, transition: { duration: 0.12 } })
+    expect(press).toEqual({ scale: 0.98, transform: 'scale(0.98)', transition: { duration: 0.12 } })
   })
 
   it('reduced motion returns instant variants', () => {

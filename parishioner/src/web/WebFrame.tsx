@@ -15,7 +15,7 @@ export function WebFrame({ children, header, width = 'max-w-[960px]' }: { childr
   const isHeading = heading !== header
 
   return (
-    <div className="flex min-h-screen flex-col bg-paper">
+    <div className="flex min-h-dvh flex-col bg-paper">
       <TopNav />
       <main id="main" tabIndex={-1} className={`mx-auto w-full flex-1 px-6 py-8 outline-none ${width}`}>
         {header && isHeading && (

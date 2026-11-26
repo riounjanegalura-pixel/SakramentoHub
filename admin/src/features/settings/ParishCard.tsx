@@ -8,6 +8,7 @@ import crest from '../../assets/crest-sm.png'
 import { updateParishSettings } from '../../lib/data/settings'
 import { durations, ease } from '../../lib/motion'
 import type { ParishSettings } from '../../lib/types'
+import { MassScheduleEditor } from './MassScheduleEditor'
 import { SaveBar } from './SaveBar'
 
 const SIGNATURE_TYPES = ['image/png', 'image/jpeg']
@@ -23,6 +24,8 @@ function readAsDataUrl(file: File): Promise<string> {
     reader.readAsDataURL(file)
   })
 }
+
+const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const toMin = (t: string) => {
   const [h, mm] = t.split(':').map(Number)
@@ -43,7 +46,7 @@ export function ParishCard({ parish, canEdit }: { parish: ParishSettings; canEdi
   // Re-sync only when the server's values really changed, so a background refetch never wipes what is being typed.
   useEffect(() => setForm(JSON.parse(serverKey) as ParishSettings), [serverKey])
 
-  const changed = (Object.keys(form) as (keyof ParishSettings)[]).filter((k) => form[k] !== parish[k])
+  const changed = (Object.keys(form) as (keyof ParishSettings)[]).filter((k) => JSON.stringify(form[k]) !== JSON.stringify(parish[k]))
   const save = useMutation({
     mutationFn: () => updateParishSettings(Object.fromEntries(changed.map((k) => [k, form[k]])) as Partial<ParishSettings>),
     onSuccess: () => {
@@ -97,8 +100,11 @@ export function ParishCard({ parish, canEdit }: { parish: ParishSettings; canEdi
             >
               <Input disabled={!canEdit} maxLength={160} value={form.parishAddress} onChange={(e) => set('parishAddress', e.target.value)} />
             </Field>
-            <Field id="parish-phone" label="Phone">
+            <Field id="parish-phone" label="Phone" description="Shown to parishioners, and used for the urgent call button">
               <Input disabled={!canEdit} value={form.parishPhone} onChange={(e) => set('parishPhone', e.target.value)} />
+            </Field>
+            <Field id="parish-email" label="Email" description="Shown in Help. Leave empty to show none">
+              <Input type="email" disabled={!canEdit} maxLength={120} value={form.parishEmail ?? ''} onChange={(e) => set('parishEmail', e.target.value === '' ? null : e.target.value)} />
             </Field>
           </div>
         </div>
@@ -144,6 +150,32 @@ export function ParishCard({ parish, canEdit }: { parish: ParishSettings; canEdi
 
         <div className={SECTION} role="group" aria-label="Hours and slots">
           <h2 className={H2}>Hours and slots</h2>
+          <div role="group" aria-label="Office days" className="grid content-start gap-1.5">
+            <span className="text-sm font-medium text-ink">Office days</span>
+            <div className="flex flex-wrap gap-2">
+              {DAYS.map((label, i) => {
+                const day = i + 1
+                const on = form.officeDays.includes(day)
+                return (
+                  <label
+                    key={day}
+                    className={`inline-flex min-h-11 min-w-14 cursor-pointer items-center justify-center rounded-xl px-3 text-[14px] has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${on ? 'bg-surface font-semibold text-navy ring-2 ring-inset ring-navy' : 'bg-paper-deep font-medium text-ink-muted'}`}
+                  >
+                    <input
+                      type="checkbox"
+                      className="sr-only"
+                      aria-label={label}
+                      disabled={!canEdit}
+                      checked={on}
+                      onChange={() => set('officeDays', (on ? form.officeDays.filter((d) => d !== day) : [...form.officeDays, day]).sort((a, b) => a - b))}
+                    />
+                    {label}
+                  </label>
+                )
+              })}
+            </div>
+            <p className="text-[13px] text-ink-muted">Parishioners see these days and the hours below as the office hours</p>
+          </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Field id="hours-start" label="Opens">
               <Input type="time" disabled={!canEdit} value={form.workingHoursStart} onChange={(e) => set('workingHoursStart', e.target.value)} />
@@ -186,9 +218,10 @@ export function ParishCard({ parish, canEdit }: { parish: ParishSettings; canEdi
             <div className="relative h-3 overflow-hidden rounded-full bg-paper-deep">
               {hoursOk && (
                 <m.div
-                  className="absolute inset-y-0 rounded-full bg-navy"
+                  // Moves and stretches as a transform (start then length, from the left), not as left/width, which re-lay-out the page.
+                  className="absolute inset-y-0 left-0 w-full origin-left bg-navy"
                   initial={false}
-                  animate={{ left: `${open}%`, width: `${close - open}%` }}
+                  animate={{ transform: `translateX(${open}%) scaleX(${(close - open) / 100})` }}
                   transition={{ duration: durations.base, ease: [...ease] }}
                 />
               )}
@@ -197,6 +230,31 @@ export function ParishCard({ parish, canEdit }: { parish: ParishSettings; canEdi
               <span>12 AM</span><span>6 AM</span><span>12 PM</span><span>6 PM</span><span>12 AM</span>
             </div>
           </div>
+          <div className="grid content-start gap-1.5">
+            <span className="text-sm font-medium text-ink">Gap between visits</span>
+            <div role="radiogroup" aria-label="Gap between visits" className="inline-flex min-h-[44px] self-start rounded-xl bg-paper-deep p-1">
+              {[0, 5, 10, 15, 30].map((n) => {
+                const on = form.slotGapMinutes === n
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    disabled={!canEdit}
+                    onClick={() => set('slotGapMinutes', n)}
+                    className={`min-h-11 rounded-lg px-3 text-[14px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-70 ${on ? 'bg-surface font-semibold text-navy ring-2 ring-inset ring-navy' : 'font-medium text-ink-muted'}`}
+                  >
+                    {n === 0 ? 'None' : `${n} min`}
+                  </button>
+                )
+              })}
+            </div>
+            <p className="text-[13px] text-ink-muted">Times are offered one after another: a 45 minute visit at 8:00 ends at 8:45, and the next time offered is 8:45 plus this gap</p>
+          </div>
+          <Field id="mass-buffer" label="Mass buffer" description="Minutes kept quiet before and after every Mass" className="max-w-[260px]">
+            <Input id="mass-buffer" type="number" min={0} max={120} step={5} disabled={!canEdit} value={form.massBufferMinutes} onChange={(e) => set('massBufferMinutes', Number(e.target.value || 0))} className="text-center" />
+          </Field>
           <Field id="travel-buffer" label="Travel buffer" description="Minutes kept free before off-site visits" className="max-w-[260px]">
             <div className="flex items-center gap-2">
               <Button type="button" variant="outline" size="icon" aria-label="Decrease travel buffer" disabled={!canEdit || form.travelBufferMinutes <= 0} onClick={() => set('travelBufferMinutes', Math.max(0, form.travelBufferMinutes - 5))}>
@@ -208,6 +266,11 @@ export function ParishCard({ parish, canEdit }: { parish: ParishSettings; canEdi
               </Button>
             </div>
           </Field>
+        </div>
+
+        <div className={SECTION} role="group" aria-label="Masses">
+          <h2 className={H2}>Masses</h2>
+          <MassScheduleEditor rows={form.massSchedule} onChange={(rows) => set('massSchedule', rows)} disabled={!canEdit} />
         </div>
 
         {canEdit && (

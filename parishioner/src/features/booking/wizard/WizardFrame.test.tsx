@@ -106,7 +106,7 @@ afterEach(() => {
 describe('wizard frame on a phone', () => {
   it('draws one Continue button in a fixed footer outside the animated main, the wide 52 px primary, and nothing else beside it', async () => {
     renderWizard('/booking/house-blessing/2')
-    const cont = await screen.findByRole('button', { name: 'Continue' })
+    const cont = await screen.findByRole('button', { name: 'Next' })
     expect(screen.getByRole('main')).not.toContainElement(cont)
     const footer = footerOf(cont)
     expect(footer).not.toBeNull()
@@ -115,15 +115,15 @@ describe('wizard frame on a phone', () => {
     expect(within(footer!).queryByRole('button', { name: /cancel|discard/i })).toBeNull()
     expect(cont.className).toMatch(/min-h-\[56px\]/)
     expect(cont.className).toMatch(/flex-1/)
-    expect(cont.className).toMatch(/bg-navy/)
+    expect(cont.className).toMatch(/bg-gold/)
   })
 
   it('puts "Discard draft" in the header, away from the thumb zone, and asks before throwing anything away', async () => {
     const user = userEvent.setup()
     renderWizard('/booking/house-blessing/2')
-    await screen.findByRole('button', { name: 'Continue' })
+    await screen.findByRole('button', { name: 'Next' })
     const discard = screen.getByRole('button', { name: 'Discard draft' })
-    expect(footerOf(screen.getByRole('button', { name: 'Continue' }))).not.toContainElement(discard)
+    expect(footerOf(screen.getByRole('button', { name: 'Next' }))).not.toContainElement(discard)
     expect(discard.compareDocumentPosition(screen.getByRole('main')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     await user.click(discard)
     expect(await screen.findByText('Discard this draft?')).toBeInTheDocument()
@@ -133,7 +133,7 @@ describe('wizard frame on a phone', () => {
   it('tabs through the step body first and then reaches Continue last, matching the visual order', async () => {
     const user = userEvent.setup()
     renderWizard('/booking/house-blessing/2')
-    const cont = await screen.findByRole('button', { name: 'Continue' })
+    const cont = await screen.findByRole('button', { name: 'Next' })
     const main = screen.getByRole('main')
     expect(main.compareDocumentPosition(cont) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     const last = [...main.querySelectorAll<HTMLElement>('input, button, select, textarea, a[href]')].at(-1)
@@ -187,7 +187,7 @@ describe('errors on Continue', () => {
     const user = userEvent.setup()
     renderWizard('/booking/house-blessing/3')
     await screen.findByRole('heading', { name: /what will be blessed/i })
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
 
     await waitFor(() => expect(document.activeElement).toHaveAttribute('name', 'propertyType'))
     expect(screen.queryByRole('heading', { name: /check \d+ answers?/i })).not.toBeInTheDocument()
@@ -205,7 +205,7 @@ describe('errors on Continue', () => {
     useBookingStore.getState().updateFormData({ bookingFor: 'other', relationship: 'parent' })
     renderWizard('/booking/baptism/3')
     await screen.findByRole('heading', { name: /person to be baptized/i })
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
 
     const heading = await screen.findByRole('heading', { name: /check \d+ answers/i })
     const summary = heading.closest('[role="alert"]') as HTMLElement
@@ -233,7 +233,7 @@ describe('errors on Continue', () => {
     const user = userEvent.setup()
     renderWizard('/booking/house-blessing/3')
     await screen.findByRole('heading', { name: /what will be blessed/i })
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
     await waitFor(() => expect(document.activeElement).toHaveAttribute('name', 'propertyType'))
 
     // The person moves on by themselves; typing changes the errors and re-renders the step.
@@ -244,7 +244,7 @@ describe('errors on Continue', () => {
     expect(owner).toHaveFocus()
 
     // A new Continue moves focus again, to what is still wrong.
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
     await waitFor(() => expect(document.activeElement).toHaveAttribute('name', 'propertyType'))
   })
 
@@ -275,7 +275,7 @@ describe('errors on Continue', () => {
     expect(label).toHaveTextContent('Required')
     await expectNoA11yViolations(container)
 
-    await user.click(screen.getByRole('button', { name: 'Continue' }))
+    await user.click(screen.getByRole('button', { name: 'Next' }))
     await screen.findByRole('heading', { name: /check \d+ answers?/i })
     expect(first).toHaveAttribute('aria-invalid', 'true')
     await waitFor(() => expect(document.activeElement).toBe(first))
@@ -395,7 +395,7 @@ describe('wizard frame on a desktop', () => {
   it('keeps Continue at the end of the step, not in a fixed footer', async () => {
     setViewport(1280)
     renderWizard('/booking/house-blessing/2')
-    const cont = await screen.findByRole('button', { name: 'Continue' })
+    const cont = await screen.findByRole('button', { name: 'Next' })
     expect(footerOf(cont)).toBeNull()
   })
 })
@@ -406,7 +406,7 @@ describe('schedule step Continue', () => {
     useBookingStore.getState().startBooking('house-blessing')
     useBookingStore.getState().updateFormData({ bookingFor: 'self', propertyType: 'vehicle', propertyOwner: 'Ricardo Dalisay', vehiclePlate: 'NBC 1234' })
     renderWizard('/booking/house-blessing/1')
-    const cont = await screen.findByRole('button', { name: 'Continue' })
+    const cont = await screen.findByRole('button', { name: 'Next' })
     expect(cont).toBeEnabled()
     await user.click(cont)
     expect(await screen.findByRole('alert')).toHaveTextContent('Choose a date and a time to continue.')

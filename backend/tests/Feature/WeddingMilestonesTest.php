@@ -485,7 +485,7 @@ function licensed(Booking $booking, string $issuedOn): BookingMilestone
     ]);
 }
 
-function staffMove(Booking $booking, string $date, string $start = '10:00')
+function staffMove(Booking $booking, string $date, string $start = '09:30')
 {
     return test()->actingAs(test()->staff)->patchJson("/api/admin/bookings/{$booking->id}/reschedule", [
         'appointmentDate' => $date, 'appointmentStart' => $start, 'reason' => 'Family asked',
@@ -505,7 +505,7 @@ test('moving a wedding inside the license window keeps the tick; day 120 keeps i
 
     $loses = wedding(['appointment_start' => '14:00'], '2027-02-27');
     licensed($loses, '2026-11-05'); // covers until 2027-03-05; the 6th is day 121
-    staffMove($loses, '2027-03-06', '14:00')->assertOk()->assertJsonPath('appointmentDate', '2027-03-06');
+    staffMove($loses, '2027-03-06', '14:30')->assertOk()->assertJsonPath('appointmentDate', '2027-03-06');
     expect(steps($loses)['marriage_license']['done'])->toBeFalse()->and(BookingMilestone::where('booking_id', $loses->id)->count())->toBe(0);
 });
 
@@ -543,7 +543,7 @@ test('the owner moving the wedding also rechecks the license, and the move still
     $booking = wedding(date: '2027-02-27');
     licensed($booking, '2026-10-30');
 
-    $this->actingAs($this->owner)->patchJson("/api/bookings/{$booking->id}/reschedule", ['appointmentDate' => '2027-03-06', 'appointmentStart' => '10:00'])
+    $this->actingAs($this->owner)->patchJson("/api/bookings/{$booking->id}/reschedule", ['appointmentDate' => '2027-03-06', 'appointmentStart' => '09:30'])
         ->assertOk()->assertJsonPath('appointmentDate', '2027-03-06');
 
     expect(BookingMilestone::where('booking_id', $booking->id)->count())->toBe(0)
@@ -574,7 +574,7 @@ test('an Art. 34 affidavit, a wedding with no license tick and any other sacrame
     ]);
 
     staffMove($affidavit, '2027-03-06')->assertOk();
-    staffMove($bare, '2027-03-06', '14:00')->assertOk();
+    staffMove($bare, '2027-03-06', '14:30')->assertOk();
     staffMove($blessing, '2026-12-12')->assertOk();
 
     expect(BookingMilestone::where('booking_id', $affidavit->id)->count())->toBe(1)

@@ -6,16 +6,16 @@ import { render, screen } from '@testing-library/react'
 import { Button } from './button'
 
 describe('Button', () => {
-  it('default is the navy primary with white text, 12 px radius and no shadow', () => {
+  it('default is the gold accent with navy text, 12 px radius and no shadow', () => {
     render(<Button>Save</Button>)
     const el = screen.getByRole('button', { name: 'Save' })
-    expect(el).toHaveClass('bg-navy', 'text-white', 'rounded-xl')
+    expect(el).toHaveClass('bg-gold', 'text-navy', 'rounded-xl')
     expect(el.className.split(/\s+/).filter((c) => /(^|:)shadow/.test(c))).toEqual([])
   })
 
-  it('navy is a navy fill with white text', () => {
+  it('navy is kept as an alias of the default accent', () => {
     render(<Button variant="navy">Back</Button>)
-    expect(screen.getByRole('button', { name: 'Back' })).toHaveClass('bg-navy', 'text-white')
+    expect(screen.getByRole('button', { name: 'Back' })).toHaveClass('bg-gold', 'text-navy')
   })
 
   it('outline, ghost and destructive use token classes', () => {
@@ -67,7 +67,7 @@ describe('Button', () => {
         <a href="/x">Link</a>
       </Button>,
     )
-    expect(screen.getByRole('link', { name: 'Link' })).toHaveClass('bg-navy')
+    expect(screen.getByRole('link', { name: 'Link' })).toHaveClass('bg-gold')
   })
 
   it('has no transition or animate utility classes (motion library only)', () => {

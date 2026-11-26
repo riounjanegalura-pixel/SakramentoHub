@@ -44,6 +44,5 @@
         ],
         "birthCertificate": "/documents/{OWNER}/birth.pdf",
         "marriageContract": "/documents/{OWNER}/marriage.pdf"
-    },
-    "expectErrorKey": "sponsors.0.religion"
+    }
 }

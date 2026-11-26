@@ -93,15 +93,23 @@ test('a baptism can leave out the mother with a reason, as it can the father', f
         }
     }
 
-    expect(SacramentRules::errors('baptism', array_merge($d, ['motherOmitted' => true, 'motherOmittedReason' => 'Estranged / uncontactable']), $owner))->toBe([]);
-    expect(SacramentRules::errors('baptism', array_merge($d, ['motherOmitted' => true]), $owner))->toHaveKey('motherOmittedReason');
+    // The mother cannot be left out: an old client that still sends the choice is refused, and her details are required.
+    expect(SacramentRules::errors('baptism', array_merge($d, ['motherOmitted' => true, 'motherOmittedReason' => 'Estranged / uncontactable']), $owner))->toHaveKey('motherOmitted');
+    expect(SacramentRules::errors('baptism', $d, $owner))->toHaveKey('motherFirstName')->toHaveKey('motherReligion');
 });
 
-test('a baptism can leave out both parents, for example an adult baptism', function () {
+test('a baptism can leave out the father with a reason, never the mother', function () {
     $owner = (string) Str::uuid();
-    $d = array_merge(formDataFixture('baptism/valid-basic', $owner), [
-        'fatherOmitted' => true, 'fatherOmittedReason' => 'Estranged / uncontactable', 'motherOmitted' => true, 'motherOmittedReason' => 'Estranged / uncontactable',
-    ]);
+    $d = array_merge(formDataFixture('baptism/valid-basic', $owner), ['fatherOmitted' => true, 'fatherOmittedReason' => 'Estranged / uncontactable']);
+
+    expect(SacramentRules::errors('baptism', $d, $owner))->toBe([]);
+    expect(SacramentRules::errors('baptism', array_merge($d, ['motherOmitted' => true, 'motherOmittedReason' => 'Estranged / uncontactable']), $owner))->toHaveKey('motherOmitted');
+});
+
+test('a sponsor does not need an address, and a baptism without one is still valid', function () {
+    $owner = (string) Str::uuid();
+    $d = formDataFixture('baptism/valid-basic', $owner);
+    $d['sponsors'] = array_map(fn ($s) => array_diff_key($s, ['residence' => 1, 'residenceLine' => 1]), $d['sponsors']);
 
     expect(SacramentRules::errors('baptism', $d, $owner))->toBe([]);
 });

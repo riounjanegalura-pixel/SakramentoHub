@@ -19,6 +19,11 @@ class ParishController extends Controller
             'address' => ParishSetting::parishAddress(),
             'priestName' => ParishSetting::priestName(),
             'workingHours' => ['start' => $start, 'end' => $end],
+            // The days the office is open (ISO weekdays) and where to write; all from settings, none typed into the apps.
+            'officeDays' => ParishSetting::officeDays(),
+            'email' => ParishSetting::parishEmail(),
+            // The fixed weekly Masses, so the apps can show them as well as close them on the calendar.
+            'massSchedule' => ParishSetting::massSchedule(),
             // Whether the parishioner app asks for a demo code after a real PayMongo payment (DEMO_PAYMENT_OTP).
             'demoPaymentOtp' => (bool) config('paymongo.demo_otp'),
             // Whether the office approves a booking before the parishioner can pay (APPROVAL_BEFORE_PAYMENT).

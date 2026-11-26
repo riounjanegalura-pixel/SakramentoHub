@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,11 +11,30 @@ class ParishEvent extends Model
 {
     use HasUuids;
 
-    protected $fillable = ['title', 'date', 'location', 'image_url', 'category', 'created_by', 'duration_minutes'];
+    protected $fillable = ['title', 'date', 'location', 'image_url', 'category', 'created_by', 'duration_minutes', 'blocks_bookings'];
 
     protected function casts(): array
     {
-        return ['date' => 'datetime', 'duration_minutes' => 'integer'];
+        return ['date' => 'datetime', 'duration_minutes' => 'integer', 'blocks_bookings' => 'boolean'];
+    }
+
+    /**
+     * Events that fall inside the given parish-time days (inclusive), whatever zone the database keeps them in. An event is
+     * stored as a real instant, so "the 25th" is the parish day's own start and end converted, never the stored date part.
+     */
+    public function scopeBetweenParishDays(Builder $query, string $firstDay, string $lastDay): Builder
+    {
+        $zone = config('app.parish_timezone', 'Asia/Manila');
+        $from = CarbonImmutable::parse($firstDay, $zone)->startOfDay()->setTimezone(config('app.timezone'));
+        $to = CarbonImmutable::parse($lastDay, $zone)->addDay()->startOfDay()->setTimezone(config('app.timezone'));
+
+        return $query->where('date', '>=', $from)->where('date', '<', $to);
+    }
+
+    /** When the event starts, on the parish clock: what the office typed and what a parishioner reads. */
+    public function parishTime(): CarbonImmutable
+    {
+        return CarbonImmutable::parse($this->date)->setTimezone(config('app.parish_timezone', 'Asia/Manila'));
     }
 
     public function creator()

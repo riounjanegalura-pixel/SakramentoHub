@@ -1,6 +1,7 @@
 import { ChevronLeft } from 'lucide-react'
 import { useReducedMotion } from 'motion/react'
 import * as m from 'motion/react-m'
+import { durations, ease } from '../../lib/motion'
 import { cn } from '../../lib/utils'
 import { DiscardDraft } from './DiscardDraft'
 
@@ -19,8 +20,8 @@ interface WizardProgressProps {
 
 /**
  * Segmented progress (spec section 12): one segment per step, its name in text. Completed segments are navy;
- * the current one carries a gold segment that slides to the next step through a shared layout animation
- * (`layoutId="wizard-progress"`, spec section 14); under reduced motion it simply appears in place.
+ * the current one fills from the left as its step opens (a transform animation, so it stays smooth while the next page loads);
+ * under reduced motion it simply appears in place.
  */
 export function WizardProgress({ steps, current, variant = 'compact', onJump, label }: WizardProgressProps) {
   const reduced = useReducedMotion() ?? false
@@ -45,12 +46,15 @@ export function WizardProgress({ steps, current, variant = 'compact', onJump, la
               (reduced ? (
                 <span data-active className="absolute inset-0 rounded-full bg-navy" />
               ) : (
+                // The fill grows from the left as the step opens. A `transform` string runs off the main thread in every
+                // Motion version, so it stays smooth while the next step is loading (a layout animation would not).
                 <m.span
                   data-active
-                  data-layout-id="wizard-progress"
-                  layoutId="wizard-progress"
-                  transition={{ type: 'spring', stiffness: 420, damping: 38 }}
-                  className="absolute inset-0 rounded-full bg-navy"
+                  data-progress-fill="wizard-progress"
+                  initial={{ transform: 'scaleX(0)' }}
+                  animate={{ transform: 'scaleX(1)' }}
+                  transition={{ duration: durations.base, ease: [...ease] }}
+                  className="absolute inset-0 origin-left bg-navy"
                 />
               ))}
           </span>

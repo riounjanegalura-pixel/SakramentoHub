@@ -54,9 +54,19 @@ describe('wedding party step tabs', () => {
     expect(screen.getByLabelText(/^Father's citizenship/, { selector: 'input' })).not.toBeVisible()
   })
 
-  it('marks every tab that holds a problem when Continue is pressed, and keeps their fields mounted', async () => {
+  it('checks only the open tab when Next is pressed, and leaves the others unmarked until the person gets there', async () => {
     renderGroomStep()
-    await userEvent.click(await screen.findByRole('button', { name: /continue/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /^next$/i }))
+    await waitFor(() => expect(document.getElementById('groomFirstName')).toHaveFocus())
+    expect(tab(/About the groom/)).toHaveAttribute('aria-selected', 'true')
+    expect(screen.queryByRole('tab', { name: /Parents, has a problem/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: /Sacraments received, has a problem/ })).not.toBeInTheDocument()
+  })
+
+  it('marks every tab that holds a problem when Next is pressed on the last tab, and keeps their fields mounted', async () => {
+    renderGroomStep()
+    await userEvent.click(await screen.findByRole('tab', { name: /Sacraments received/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
     await waitFor(() => expect(tab(/Parents, has a problem/)).toBeInTheDocument())
     expect(tab(/Sacraments received, has a problem/)).toBeInTheDocument()
     await userEvent.click(tab(/Sacraments received/))
@@ -65,13 +75,14 @@ describe('wedding party step tabs', () => {
 
   it('moves focus to the first invalid field, which is on screen', async () => {
     renderGroomStep()
-    await userEvent.click(await screen.findByRole('button', { name: /continue/i }))
+    await userEvent.click(await screen.findByRole('button', { name: /^next$/i }))
     await waitFor(() => expect(document.getElementById("groomFirstName")).toHaveFocus())
   })
 
   it('has no axe violations with a problem marked on its tab', async () => {
     const { container } = renderGroomStep()
-    await userEvent.click(await screen.findByRole('button', { name: /continue/i }))
+    await userEvent.click(await screen.findByRole('tab', { name: /Sacraments received/ }))
+    await userEvent.click(screen.getByRole('button', { name: /^next$/i }))
     await waitFor(() => expect(tab(/Parents, has a problem/)).toBeInTheDocument())
     await expectNoA11yViolations(container)
   })

@@ -24,6 +24,7 @@ import { useIsDesktop } from '../../hooks/useIsDesktop'
 import { DayPassCard } from './DayPassCard'
 import { DocumentStateLine } from './DocumentStateLine'
 import { PreparationCard } from './PreparationCard'
+import { ReplaceDocument } from './ReplaceDocument'
 import { documentState } from './documentState'
 import { journeyStages } from './journeyStages'
 import { useHoldExpiry } from '../../hooks/useHoldExpiry'
@@ -251,17 +252,18 @@ export function BookingDetailScreen() {
                     {!doc.required && <span className="text-ink-muted"> (optional)</span>}
                   </p>
                   <DocumentStateLine state={documentState(doc)} />
+                  {/* A document the office sent back is replaced right here, whatever the booking's state (not once it is closed). */}
+                  {doc.review?.status === 'rejected' && ['submitted', 'approved', 'returned'].includes(b.status) && (
+                    <ReplaceDocument booking={b} doc={doc} onUpdated={refresh} />
+                  )}
                 </li>
               ))}
             </ul>
-            {hasRejectedDocument &&
-              (b.status === 'returned' && documentsStepNumber > 0 ? (
-                <Button type="button" className="mt-3" onClick={() => resumeBooking(b, navigate, documentsStepNumber)}>
-                  Upload a new file
-                </Button>
-              ) : (
-                b.status === 'submitted' && <p className="mt-3 text-ink-muted">The parish office will ask you to upload a new file.</p>
-              ))}
+            {hasRejectedDocument && b.status === 'returned' && documentsStepNumber > 0 && (
+              <Button type="button" variant="outline" className="mt-3" onClick={() => resumeBooking(b, navigate, documentsStepNumber)}>
+                Review and send it back
+              </Button>
+            )}
           </section>
         )}
 

@@ -42,12 +42,12 @@ function draftFor(User $owner, string $sacrament, string $fixture, ?string $date
 }
 
 test('submitting a priced booking holds the slot for 48 hours unpaid', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
 
     expect($b->status)->toBe(BookingStatus::Submitted)
         ->and($b->payment_status)->toBe(PaymentStatus::Unpaid)
         ->and($b->amount_due_centavos)->toBe(500000)
-        ->and($b->appointment_end)->toBe('11:30')
+        ->and($b->appointment_end)->toBe('11:00')
         ->and($b->payment_hold_expires_at->equalTo(now()->addHours(48)))->toBeTrue();
 });
 
@@ -141,7 +141,7 @@ test('a non-emergency anointing needs no phone', function () {
 });
 
 test('approve requires confirmed payment for a priced booking', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
     $this->sm->approve($b, $this->staff);
 })->throws(BookingRuleViolation::class, 'cannot be approved until its GCash payment is confirmed');
 
@@ -164,7 +164,7 @@ test('approving a booking whose owner deleted their account does not crash', fun
 });
 
 test('returning a booking clears the payment hold and keeps the slot 7 days', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
     $b = $this->sm->returnForChanges($b, $this->staff, 'Please re-upload a clearer CENOMAR.');
 
     expect($b->status)->toBe(BookingStatus::Returned)
@@ -188,7 +188,7 @@ test('resubmitting a returned booking whose time was taken meanwhile fails and s
 });
 
 test('declining a paid booking makes the refund due and alerts staff', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
     $b->update(['payment_status' => 'paid']);
     $b = $this->sm->decline($b, $this->staff, 'Incomplete requirements');
 
@@ -199,7 +199,7 @@ test('declining a paid booking makes the refund due and alerts staff', function 
 });
 
 test('cancelling an unpaid booking voids it and expires the checkout session', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
     $b->update(['paymongo_checkout_session_id' => 'cs_1']);
     $b = $this->sm->cancel($b, $this->owner, 'Changed plans');
 
@@ -260,7 +260,7 @@ test('payment arriving for a cancelled booking becomes refund due, never paid', 
 });
 
 test('an underpayment on an open booking becomes refund due instead of paid', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
 
     expect($this->sm->recordPayment($b, 'cs_1', 'pay_1', 100000, 'evt_1'))->toBe('refund_due')
         ->and($b->fresh()->payment_status)->toBe(PaymentStatus::RefundDue)
@@ -268,7 +268,7 @@ test('an underpayment on an open booking becomes refund due instead of paid', fu
 });
 
 test('payment for an open unpaid booking is recorded', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
 
     expect($this->sm->recordPayment($b, 'cs_1', 'pay_1', 500000, 'evt_1'))->toBe('processed')
         ->and($b->fresh()->payment_status)->toBe(PaymentStatus::Paid)
@@ -297,7 +297,7 @@ test('replaying the same payment id after a refund is a duplicate', function () 
 });
 
 test('a second different payment on a paid booking is flagged for refund and the first is kept', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
     $this->sm->recordPayment($b, 'cs_1', 'pay_1', 500000, 'evt_1');
 
     expect($this->sm->recordPayment($b->fresh(), 'cs_2', 'pay_2', 500000, 'evt_2'))->toBe('refund_due')
@@ -410,7 +410,7 @@ test('rescheduling an emergency anointing to a real date clears the emergency fl
 });
 
 test('resubmitting a booking with a refund due is refused and keeps the refund flag', function () {
-    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '10:00'), $this->owner);
+    $b = $this->sm->submit(draftFor($this->owner, 'wedding', 'wedding/valid-basic', '2027-02-02', '09:30'), $this->owner);
     $this->sm->recordPayment($b, 'cs_1', 'pay_1', 100000, 'evt_1'); // underpaid
     expect($b->fresh()->payment_status)->toBe(PaymentStatus::RefundDue);
     $b = $this->sm->returnForChanges($b->fresh(), $this->staff, 'Fix the names.');

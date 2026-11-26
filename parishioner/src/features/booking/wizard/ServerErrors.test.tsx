@@ -110,13 +110,13 @@ describe('server 422 errors reach the step that owns the field', () => {
     expect(useBookingStore.getState().appointmentDate).toBe(date)
 
     await user.click(await screen.findByRole('radio', { name: '9:00 AM' }))
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     // Booking-for comes next, then the property answers, which are still filled in.
     await screen.findByRole('heading', { name: /who is this booking for/i })
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     await screen.findByRole('heading', { name: /what will be blessed/i })
     expect(screen.getByLabelText(/plate number/i)).toHaveValue('NBC 1234')
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     const again = await screen.findByRole('button', { name: /submit booking/i })
     await vi.waitFor(() => expect(again).toBeEnabled())
@@ -133,7 +133,7 @@ describe('server 422 errors reach the step that owns the field', () => {
 
     await user.clear(screen.getByLabelText(/plate number/i))
     await user.type(screen.getByLabelText(/plate number/i), 'ABC 123')
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     expect(useServerErrorsStore.getState().byStep.property).toBeUndefined()
   })
 })

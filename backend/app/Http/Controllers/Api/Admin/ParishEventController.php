@@ -60,6 +60,8 @@ class ParishEventController extends Controller
             'location' => $request->location ?: ParishSetting::parishName(),
             'image_url' => $request->imageUrl,
             'category' => $request->category,
+            'duration_minutes' => $request->integer('durationMinutes', 60),
+            'blocks_bookings' => $request->boolean('blocksBookings', true),
             'created_by' => $request->user()->id,
         ]);
 
@@ -78,6 +80,9 @@ class ParishEventController extends Controller
             'location' => $request->location ?: $event->location,
             'image_url' => $request->imageUrl,
             'category' => $request->category,
+            // Left out of an older client's request: keep what the event already has.
+            'duration_minutes' => $request->integer('durationMinutes', (int) $event->duration_minutes),
+            'blocks_bookings' => $request->boolean('blocksBookings', (bool) $event->blocks_bookings),
         ]);
 
         $this->logAction($request, 'parish_event.updated', $event, ['title' => $event->title]);

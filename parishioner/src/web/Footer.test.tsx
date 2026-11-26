@@ -49,7 +49,7 @@ describe('Footer', () => {
     const footer = screen.getByRole('contentinfo')
     expect(await within(footer).findByRole('link', { name: '09998887777' })).toHaveAttribute('href', 'tel:09998887777')
     expect(footer).toHaveTextContent('Holy Cross Parish')
-    expect(footer).toHaveTextContent('9:30 AM – 4:00 PM')
+    expect(footer).toHaveTextContent('Office hours: 9:30 AM to 4:00 PM')
     expect(footer).not.toHaveTextContent('St. Peter')
   })
 

@@ -159,7 +159,7 @@ describe('PaymentScreen (cash at the parish office)', () => {
     expect(screen.getByText('WED-20261212-ABCD')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Where' })).toBeInTheDocument()
     expect(await screen.findByText('Balagtas, Bulacan')).toBeInTheDocument()
-    expect(screen.getByText(/open 8:00 AM to 5:00 PM/i)).toBeInTheDocument()
+    expect(screen.getByText(/office hours: Tuesday to Saturday, 8:00 AM to 5:00 PM/i)).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'By when' })).toBeInTheDocument()
     expect(screen.getByText(formatInstant(hold))).toBeInTheDocument()
     expect(screen.queryByText(/payment successful/i)).not.toBeInTheDocument()

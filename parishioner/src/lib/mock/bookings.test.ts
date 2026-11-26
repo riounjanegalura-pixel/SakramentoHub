@@ -69,7 +69,7 @@ describe('bookings mock (new contract)', () => {
 
   it('voids an unpaid booking on cancel and pays a priced one through the mock checkout', async () => {
     const date = nextWeekday(addDaysYmd(parishToday(), 95), [2, 3, 4, 5, 6])
-    const d = await saveDraft({ userId: 'u1', sacrament: 'wedding', formData: {}, appointmentDate: date, appointmentStart: '10:00' })
+    const d = await saveDraft({ userId: 'u1', sacrament: 'wedding', formData: {}, appointmentDate: date, appointmentStart: '09:30' })
     const s = await submitBooking(d.id)
     expect(s.paymentStatus).toBe('unpaid')
     await initiatePayment(s.id)
@@ -97,8 +97,8 @@ describe('bookings mock: parity with the server rules for returned and approved 
     const date = soon()
     return seedBooking({
       userId: 'u1', sacrament: 'baptism', status: 'returned', formData: { scheduleType: 'special' },
-      appointmentDate: date, appointmentStart: '10:00', returnedAt: new Date().toISOString(),
-      returnedSlot: { date, start: '10:00' }, ...over,
+      appointmentDate: date, appointmentStart: '10:15', returnedAt: new Date().toISOString(),
+      returnedSlot: { date, start: '10:15' }, ...over,
     })
   }
 
@@ -111,12 +111,12 @@ describe('bookings mock: parity with the server rules for returned and approved 
 
   it('shows the held slot as bookable to its own booking, but not to anyone else', () => {
     const b = returned()
-    expect(mockDayStatus('baptism', b.appointmentDate!, { scheduleType: 'special' }, b.id).freeStarts).toContain('10:00')
+    expect(mockDayStatus('baptism', b.appointmentDate!, { scheduleType: 'special' }, b.id).freeStarts).toContain('10:15')
     expect(mockDayStatus('baptism', b.appointmentDate!, { scheduleType: 'special' }).status).toBe('unavailable')
   })
 
   it('applies the lead time when a returned booking moves to a different start', async () => {
-    const b = returned({ appointmentStart: '11:00' }) // held 10:00, now asking for 11:00
+    const b = returned({ appointmentStart: '11:00' }) // held 10:15, now asking for 11:00
     await expect(submitBooking(b.id)).rejects.toThrow(/must be booked at least 7 days ahead/i)
   })
 
@@ -128,21 +128,21 @@ describe('bookings mock: parity with the server rules for returned and approved 
   it('remembers the slot a returned booking held when its answers are edited', async () => {
     const b = returned({ returnedSlot: undefined })
     const edited = await updateDraft(b.id, { appointmentStart: '11:00' })
-    expect(edited.returnedSlot).toEqual({ date: b.appointmentDate, start: '10:00' })
+    expect(edited.returnedSlot).toEqual({ date: b.appointmentDate, start: '10:15' })
   })
 
   it('refuses to reschedule an approved booking closer than 3 days, with the server wording', async () => {
-    const b = seedBooking({ userId: 'u1', sacrament: 'house-blessing', status: 'approved', appointmentDate: addDaysYmd(parishToday(), 2), appointmentStart: '10:00', appointmentEnd: '10:45' })
+    const b = seedBooking({ userId: 'u1', sacrament: 'house-blessing', status: 'approved', appointmentDate: addDaysYmd(parishToday(), 2), appointmentStart: '10:15', appointmentEnd: '11:00' })
     const target = nextWeekday(addDaysYmd(parishToday(), 10), [2, 3, 4, 5, 6])
-    await expect(rescheduleBooking(b.id, target, '10:00')).rejects.toThrow(
+    await expect(rescheduleBooking(b.id, target, '10:15')).rejects.toThrow(
       'Approved bookings can only be rescheduled online until 3 days before the appointment. Please call the parish office at 09123456789.',
     )
   })
 
   it('reschedules an approved booking exactly 3 days out', async () => {
-    const b = seedBooking({ userId: 'u1', sacrament: 'house-blessing', status: 'approved', appointmentDate: addDaysYmd(parishToday(), 3), appointmentStart: '10:00', appointmentEnd: '10:45' })
+    const b = seedBooking({ userId: 'u1', sacrament: 'house-blessing', status: 'approved', appointmentDate: addDaysYmd(parishToday(), 3), appointmentStart: '10:15', appointmentEnd: '11:00' })
     const target = nextWeekday(addDaysYmd(parishToday(), 10), [2, 3, 4, 5, 6])
-    const moved = await rescheduleBooking(b.id, target, '10:00')
+    const moved = await rescheduleBooking(b.id, target, '10:15')
     expect(moved.appointmentDate).toBe(target)
   })
 })

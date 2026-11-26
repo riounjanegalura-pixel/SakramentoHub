@@ -27,7 +27,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (isBootstrapping) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-surface px-6 text-center">
+      <div className="flex min-h-dvh flex-col items-center justify-center bg-surface px-6 text-center">
         <div className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-line border-t-navy" />
         {isSlow && (
           <p className="text-sm text-ink-muted">

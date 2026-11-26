@@ -14,7 +14,7 @@ export function DonateResultScreen({ outcome }: { outcome: 'thanks' | 'cancelled
   const thanks = outcome === 'thanks'
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-paper p-6 text-center">
+    <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-paper p-6 text-center">
       <ResultMark tone={thanks ? 'done' : 'stop'} icon={thanks ? Check : X} />
       <h1 className="font-display text-title font-semibold text-navy">{thanks ? 'Thank you for your gift' : 'Your gift was not made'}</h1>
       <p className="text-body text-ink-muted">

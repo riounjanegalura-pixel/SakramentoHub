@@ -33,7 +33,7 @@ describe('ResetPasswordScreen', () => {
     expect(screen.getByText('Forgot Password Screen')).toBeInTheDocument()
   })
 
-  it('uses new-password autocomplete, a named show/hide control, and a navy primary button', () => {
+  it('uses new-password autocomplete, a named show/hide control, and a gold primary button', () => {
     renderAt('/reset-password?token=abc&email=rio@example.com')
     const password = screen.getByLabelText(/new password/i)
     const confirm = screen.getByLabelText(/confirm password/i)
@@ -42,7 +42,7 @@ describe('ResetPasswordScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Show password' }))
     expect(password).toHaveAttribute('type', 'text')
     expect(confirm).toHaveAttribute('type', 'text')
-    expect(screen.getByRole('button', { name: 'Reset Password' })).toHaveClass('bg-navy', 'text-white')
+    expect(screen.getByRole('button', { name: 'Reset Password' })).toHaveClass('bg-gold', 'text-navy')
   })
 
   it('focuses the first invalid field, links its error and keeps the input', async () => {

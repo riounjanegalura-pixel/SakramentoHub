@@ -28,7 +28,7 @@ interface BookingFormStepProps {
   /** Goes one step back, answers kept. Drawn beside Continue on a desktop; a phone has Back in its header. */
   onBack?: () => void
   onContinue: () => void
-  /** Names the result of pressing it: "Continue", or the submit label on the last step. */
+  /** Names the result of pressing it: "Next", or the submit label on the last step. */
   continueLabel?: string
   continueDisabled?: boolean
   /** A line shown above the buttons (e.g. why submitting failed). */
@@ -45,7 +45,7 @@ export function BookingFormStep({
   onCancel,
   onBack,
   onContinue,
-  continueLabel = 'Continue',
+  continueLabel = 'Next',
   continueDisabled = false,
   footerNote,
 }: BookingFormStepProps) {

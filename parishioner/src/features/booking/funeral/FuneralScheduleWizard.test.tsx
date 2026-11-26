@@ -89,7 +89,7 @@ describe('funeral: the Mass place is asked with the date and time (step 2)', () 
     expect(screen.getByRole('radiogroup', { name: /where will the mass be/i })).toBeInTheDocument()
     expect(screen.getByText(/choose where the mass will be to see the free dates/i)).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     expect(await screen.findByText('Choose where the Mass will be')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /choose a date and time/i })).toBeInTheDocument()
 
@@ -111,7 +111,7 @@ describe('funeral: the Mass place is asked with the date and time (step 2)', () 
     await user.click(screen.getByRole('radio', { name: /house mass/i }))
     expect(store().appointmentDate).toBeNull()
     expect(store().appointmentStart).toBeNull()
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent(/choose a date and a time/i)
     expect(screen.getByRole('heading', { name: /choose a date and time/i })).toBeInTheDocument()
   })
@@ -131,26 +131,26 @@ describe('funeral: the Mass place is asked with the date and time (step 2)', () 
     await user.click(await screen.findByRole('radio', { name: '9:00 AM' }))
     expect(vi.mocked(fetchDayAvailability).mock.calls.at(-1)?.[2]).toEqual({ massType: 'church' })
     const chosenDate = store().appointmentDate
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     // Booking-for comes right after the calendar.
     await screen.findByRole('heading', { name: /who is/i })
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     await screen.findByRole('heading', { name: /about the deceased/i })
     expect(store().formData.massType).toBe('church')
     expect(store().formData.houseMassAddress).toBeUndefined()
     expect(store().formData.houseMassAddressLine).toBeUndefined()
     expect(store().appointmentStart).toBe('09:00')
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     // The Mass step keeps the cemetery and burial date; the wake address is only asked for a house Mass.
     await screen.findByLabelText(/cemetery/i)
     expect(screen.queryByRole('radiogroup', { name: /where will the mass be/i })).not.toBeInTheDocument()
     expect(screen.queryByText(/address of the wake/i)).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
     await screen.findByRole('heading', { name: 'Requirements', level: 2 })
-    await user.click(screen.getByRole('button', { name: /continue/i }))
+    await user.click(screen.getByRole('button', { name: /^next$/i }))
 
     await screen.findByRole('heading', { name: /review your booking/i })
     const schedule = screen.getByRole('heading', { name: 'Schedule' }).closest('section') as HTMLElement

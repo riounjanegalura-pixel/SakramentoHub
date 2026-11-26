@@ -241,7 +241,7 @@ export function RegisterWizard() {
         </PendingStatus>
 
         <Button type="submit" disabled={mutation.isPending} loading={mutation.isPending} className="w-full">
-          {mutation.isPending ? 'Creating Account…' : last ? 'Create Account' : 'Continue'}
+          {mutation.isPending ? 'Creating Account…' : last ? 'Create Account' : 'Next'}
         </Button>
 
         <p className="text-center text-sm text-ink-muted">

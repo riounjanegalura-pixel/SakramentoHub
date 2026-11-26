@@ -6,6 +6,10 @@ export interface ParishEventInput {
   date: string
   imageUrl?: string
   category: ParishEventCategory
+  /** How long it runs, in minutes. */
+  durationMinutes: number
+  /** True closes this time for every sacrament booking. */
+  blocksBookings: boolean
 }
 
 export type EventWhen = 'upcoming' | 'past' | ''

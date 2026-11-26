@@ -87,7 +87,6 @@ final class SacramentRules
     private static function baptism(array $d): array
     {
         $hasFather = ! ($d['fatherOmitted'] ?? false);
-        $hasMother = ! ($d['motherOmitted'] ?? false);
         $married = ($d['parentsMarriage'] ?? null) !== 'not_married';
 
         return [
@@ -95,17 +94,21 @@ final class SacramentRules
             'fatherOmitted' => ['required', 'boolean'],
             'fatherOmittedReason' => [$hasFather ? 'nullable' : 'required', Rule::in(self::OMIT_REASONS)],
             'fatherReligion' => [$hasFather ? 'required' : 'nullable', Rule::in(FieldGroups::CATHOLIC_ONLY)],
-            // Either parent, or both, can be left out with a reason (an adult baptism often has no parent on record).
-            'motherOmitted' => ['nullable', 'boolean'],
-            'motherOmittedReason' => [$hasMother ? 'nullable' : 'required', Rule::in(self::OMIT_REASONS)],
-            'motherReligion' => [$hasMother ? 'required' : 'nullable', Rule::in(FieldGroups::CATHOLIC_ONLY)],
+            // The father can be left out with a reason, the mother cannot: the baptism record always names her. An older
+            // client that still offers the choice is told plainly instead of being silently accepted.
+            'motherOmitted' => ['nullable', function (string $attribute, mixed $value, \Closure $fail) {
+                if (filter_var($value, FILTER_VALIDATE_BOOLEAN)) {
+                    $fail("The mother's details cannot be left out.");
+                }
+            }],
+            'motherReligion' => ['required', Rule::in(FieldGroups::CATHOLIC_ONLY)],
             'parentsMarriage' => ['required', 'in:catholic,civil,not_married'],
             'parentsMarriageDate' => [$married ? 'required' : 'nullable', 'date_format:Y-m-d'],
             'parentsMarriagePlace' => [$married ? 'required' : 'nullable', 'string', 'max:255'],
         ]
             + FieldGroups::person('child', ['dob' => true, 'placeOfBirth' => true, 'sex' => true])
             + FieldGroups::person('father', ['required' => $hasFather, 'placeOfBirth' => true])
-            + FieldGroups::person('mother', ['required' => $hasMother, 'placeOfBirth' => true])
+            + FieldGroups::person('mother', ['required' => true, 'placeOfBirth' => true])
             + FieldGroups::address('parentsResidence')
             + FieldGroups::sponsors(1, 8, 0);
     }
@@ -226,15 +229,9 @@ final class SacramentRules
             if (($sponsors[0]['age'] ?? 0) < 16) {
                 $v->errors()->add('sponsors.0.age', 'The principal godparent must be at least 16 years old.');
             }
-            if (($sponsors[0]['religion'] ?? null) !== 'Roman Catholic') {
-                $v->errors()->add('sponsors.0.religion', 'The principal godparent must be Roman Catholic.');
-            }
         }
 
         if ($sacrament === 'confirmation' && isset($sponsors[0])) {
-            if (($sponsors[0]['religion'] ?? null) !== 'Roman Catholic') {
-                $v->errors()->add('sponsors.0.religion', 'The sponsor must be Roman Catholic.');
-            }
             $sponsorName = self::fullName($sponsors[0]['firstName'] ?? null, $sponsors[0]['lastName'] ?? null);
             foreach (['father', 'mother'] as $parent) {
                 if ($sponsorName !== '' && $sponsorName === self::fullName($d["{$parent}FirstName"] ?? null, $d["{$parent}LastName"] ?? null)) {

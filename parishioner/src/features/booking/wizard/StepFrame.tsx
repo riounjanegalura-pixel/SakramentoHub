@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { AlertCircle } from 'lucide-react'
 import { BookingFormStep } from '../../../components/shared/BookingFormStep'
 import { FieldErrorAlertContext } from '../../../components/ui/field'
 import { useServerErrorsStore } from '../../../stores/server-errors-store'
 import { useStepErrorsStore, type StepFieldError } from './stepErrors'
+import { TabAdvanceContext, type TabAdvance } from './TabAdvance'
 import { useWizard } from './WizardContext'
 
 const FOCUSABLE = 'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [tabindex]'
@@ -78,8 +79,13 @@ export function StepFrame(props: { children: ReactNode; onContinue: () => void; 
     // `items` is read through itemsKey, which changes whenever they do.
   }, [attempt, itemsKey])
 
-  const onContinue = () => {
+  // A step with tabs registers here; Next then opens the next tab first and only the last tab carries on to the next page.
+  const tabAdvance = useRef<TabAdvance | null>(null)
+  const tabApi = useMemo(() => ({ set: (a: TabAdvance | null) => { tabAdvance.current = a } }), [])
+
+  const onContinue = async () => {
     setAttempt((n) => n + 1)
+    if (tabAdvance.current && (await tabAdvance.current.advance())) return
     props.onContinue()
   }
 
@@ -89,6 +95,7 @@ export function StepFrame(props: { children: ReactNode; onContinue: () => void; 
     <BookingFormStep onCancel={cancel} onBack={stepIndex > 0 ? back : undefined} onContinue={onContinue} continueLabel={props.continueLabel} continueDisabled={props.continueDisabled}>
       {/* While the summary is up it is the one announcement; the field errors stay visible and linked. */}
       <FieldErrorAlertContext.Provider value={!showSummary}>
+      <TabAdvanceContext.Provider value={tabApi}>
       <div ref={bodyRef} data-step-body>
         {showSummary && (
           <div
@@ -102,7 +109,7 @@ export function StepFrame(props: { children: ReactNode; onContinue: () => void; 
               <AlertCircle size={16} aria-hidden="true" />
               {hasServer ? 'The parish system could not accept this step' : `Check ${count} answer${count === 1 ? '' : 's'}`}
             </h2>
-            <p className="mb-2">Your answers are kept. Fix what is marked, then press Continue.</p>
+            <p className="mb-2">Your answers are kept. Fix what is marked, then press Next.</p>
             <details open={hasServer} className="group">
               <summary className="inline-flex min-h-11 cursor-pointer items-center font-medium underline underline-offset-2 outline-none focus-visible:ring-2 focus-visible:ring-focus">
                 Show what to fix
@@ -132,6 +139,7 @@ export function StepFrame(props: { children: ReactNode; onContinue: () => void; 
         )}
         {props.children}
       </div>
+      </TabAdvanceContext.Provider>
       </FieldErrorAlertContext.Provider>
     </BookingFormStep>
   )

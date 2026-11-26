@@ -16,7 +16,7 @@ class SchedulingService
     /** @var array<string, Service> */
     private array $services = [];
 
-    public function __construct(private LiturgicalCalendar $calendar) {}
+    public function __construct(private LiturgicalCalendar $calendar, private MassSchedule $masses) {}
 
     /**
      * Lead time and the same-day "an hour from now" cutoff are booking-time
@@ -258,20 +258,29 @@ class SchedulingService
     private function possibleSlotStarts(Service $service, AppointmentRequest $r, bool $bookingTime = true): array
     {
         [$open, $close] = ParishSetting::workingHours();
-        $step = ParishSetting::slotStepMinutes();
         $earliest = max($this->toMinutes($open), $this->earliestStartMinutes($r->date, $bookingTime));
 
         [$lunchOpen, $lunchClose] = ParishSetting::lunchBreak();
         $lunchStart = $this->toMinutes($lunchOpen);
         $lunchEnd = $this->toMinutes($lunchClose);
 
+        // Visits are offered one after another: the next start is this visit's end plus the gap, never a time that
+        // overlaps it. The slot step is the least distance between two starts, so a short visit can still sit on a grid.
+        $length = $service->duration_minutes;
+        $stride = max(ParishSetting::slotStepMinutes(), $length + ParishSetting::slotGapMinutes(), 1);
+
         $starts = [];
-        for ($m = $this->toMinutes($open); $m + $service->duration_minutes <= $this->toMinutes($close); $m += $step) {
-            // A visit may not start in, or run through, the lunch break.
-            $overlapsLunch = $lunchStart < $lunchEnd && $m < $lunchEnd && $lunchStart < $m + $service->duration_minutes;
-            if ($m >= $earliest && ! $overlapsLunch) {
+        for ($m = $this->toMinutes($open); $m + $length <= $this->toMinutes($close);) {
+            // A visit may not start in, or run through, the lunch break: the next one starts when lunch ends.
+            if ($lunchStart < $lunchEnd && $m < $lunchEnd && $lunchStart < $m + $length) {
+                $m = $lunchEnd;
+
+                continue;
+            }
+            if ($m >= $earliest) {
                 $starts[] = $this->toTime($m);
             }
+            $m += $stride;
         }
 
         return $starts;
@@ -326,11 +335,16 @@ class SchedulingService
             }
         }
 
-        // Parish event timestamps are entered as parish wall-clock time.
-        foreach (ParishEvent::where('category', 'mass')->whereDate('date', $date)->get() as $mass) {
-            $at = Carbon::parse($mass->date);
+        // The fixed weekly Masses, with the buffer the office keeps around each.
+        foreach ($this->masses->intervalsFor($date) as $interval) {
+            $intervals[] = $interval;
+        }
+
+        // Parish events that close their time (a Mass, an assembly, a retreat): stored as real instants, read on the parish clock.
+        foreach (ParishEvent::where('blocks_bookings', true)->betweenParishDays($date, $date)->get() as $event) {
+            $at = $event->parishTime();
             $start = $at->hour * 60 + $at->minute;
-            $intervals[] = [$start, $start + (int) ($mass->duration_minutes ?? 60)];
+            $intervals[] = [$start, $start + (int) ($event->duration_minutes ?? 60)];
         }
 
         return $intervals;

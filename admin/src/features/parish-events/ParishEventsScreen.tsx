@@ -36,7 +36,8 @@ const PARTS = new Intl.DateTimeFormat('en-US', { timeZone: MANILA, year: 'numeri
 
 /** "Sun, Nov 8 · 8:00 AM · Main church", in parish time. */
 function metaText(event: AdminParishEvent): string {
-  return [WEEKDAY_DATE.format(new Date(event.date)), formatManilaTime(event.date), event.location].join(' · ')
+  const closes = event.blocksBookings ? `Closes bookings for ${event.durationMinutes} min` : null
+  return [WEEKDAY_DATE.format(new Date(event.date)), formatManilaTime(event.date), event.location, closes].filter(Boolean).join(' · ')
 }
 
 /** The event's date and time of day, in parish time, as the two form inputs need them. */
@@ -46,7 +47,7 @@ function toDateAndTime(iso: string): { date: string; time: string } {
   return { date: `${p.year}-${p.month}-${p.day}`, time: `${p.hour}:${p.minute}` }
 }
 
-type FieldErrors = Partial<Record<'title' | 'date' | 'time', string>>
+type FieldErrors = Partial<Record<'title' | 'date' | 'time' | 'duration', string>>
 
 /** Reads the form into the shape create and update take; reports what is missing in words. */
 function readForm(form: HTMLFormElement): { input?: ParishEventInput; errors: FieldErrors } {
@@ -56,6 +57,8 @@ function readForm(form: HTMLFormElement): { input?: ParishEventInput; errors: Fi
   if (!get('title')) errors.title = 'Enter a title.'
   if (!get('date')) errors.date = 'Choose a date.'
   if (!get('time')) errors.time = 'Choose a time.'
+  const minutes = Number(get('durationMinutes') || 60)
+  if (!Number.isInteger(minutes) || minutes < 15 || minutes > 720) errors.duration = 'Enter a length between 15 and 720 minutes.'
   if (Object.keys(errors).length > 0) return { errors }
   return {
     errors,
@@ -65,6 +68,8 @@ function readForm(form: HTMLFormElement): { input?: ParishEventInput; errors: Fi
       date: `${get('date')}T${get('time')}:00+08:00`,
       imageUrl: get('imageUrl') || undefined,
       category: (get('category') as ParishEventCategory) || 'general',
+      durationMinutes: minutes,
+      blocksBookings: data.get('blocksBookings') !== null,
     },
   }
 }
@@ -362,6 +367,13 @@ function EventFields({ defaultValues, errors }: { defaultValues?: AdminParishEve
       <RegField label="Time" htmlFor="ev-time" required error={errors.time}>
         <input id="ev-time" name="time" type="time" required aria-invalid={invalid('time')} defaultValue={when?.time} className={REG_INPUT} />
       </RegField>
+      <RegField label="Length (minutes)" htmlFor="ev-length" error={errors.duration}>
+        <input id="ev-length" name="durationMinutes" type="number" min={15} max={720} step={15} aria-invalid={invalid('duration')} defaultValue={defaultValues?.durationMinutes ?? 60} className={REG_INPUT} />
+      </RegField>
+      <label htmlFor="ev-blocks" className="flex min-h-11 items-center gap-3 self-end text-[15px] text-ink">
+        <input id="ev-blocks" name="blocksBookings" type="checkbox" defaultChecked={defaultValues?.blocksBookings ?? true} className="size-5 shrink-0" />
+        Closes this time for sacrament bookings
+      </label>
       <RegField label="Category" htmlFor="ev-category">
         <select id="ev-category" name="category" defaultValue={defaultValues?.category ?? 'general'} className={REG_INPUT}>
           {/* An event stored with a category from before the current list keeps it as an

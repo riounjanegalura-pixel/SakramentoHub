@@ -220,3 +220,49 @@ input[type="checkbox"] {
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
 }
+
+/* Mobile feel and forced-colors edge, kept apart from the kit's base layer above. */
+@layer base {
+  /* Feeling native on a phone (mobile-native): no grey flash on tap, taps fire at once with no double-tap-zoom wait,
+     and the label of a control is never selected by a long press. Text that is content stays selectable. */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  :where(button, a[href], [role='button'], [role='tab'], summary, label) {
+    touch-action: manipulation;
+  }
+  :where(button, [role='button'], [role='tab']) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  /* iOS zooms the page into any field under 16 px and does not zoom back: the fix is the size, never disabling zoom. */
+  @media (pointer: coarse) {
+    :where(input, select, textarea) {
+      font-size: 16px;
+    }
+  }
+  /* In Windows High Contrast the gold fill is dropped, so a button keeps a visible edge. */
+  @media (forced-colors: active) {
+    [data-slot='button'] {
+      border: 1px solid ButtonText;
+    }
+  }
+}
+
+/* Headings break their lines evenly instead of leaving one word alone on the last line. */
+@layer base {
+  :where(h1, h2, h3) {
+    text-wrap: balance;
+  }
+}
+
+/* People who ask for more contrast get the quiet greys at full strength: hairlines, field borders and muted text. */
+@media (prefers-contrast: more) {
+  :root {
+    --line: #8A8F9C;
+    --ink-muted: #1E1F24;
+    --input-border: #5B6172;
+  }
+}

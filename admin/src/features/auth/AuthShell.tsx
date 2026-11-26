@@ -30,7 +30,7 @@ function Step({ label, index }: { label: string; index: number }) {
  */
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-wrap bg-paper text-ink">
+    <div className="flex min-h-dvh flex-wrap bg-paper text-ink">
       <aside className="flex min-w-0 flex-[1_1_520px] flex-col justify-between gap-14 bg-navy px-6 py-8 text-white md:px-16 md:py-14">
         <div className="flex items-center gap-3.5">
           <div className="flex rounded-xl bg-surface px-2 py-1.5">

@@ -22,6 +22,8 @@ class AdminParishEventResource extends JsonResource
             'location' => $this->location,
             'imageUrl' => $this->image_url,
             'category' => $this->category,
+            'durationMinutes' => (int) $this->duration_minutes,
+            'blocksBookings' => (bool) $this->blocks_bookings,
             'createdBy' => $this->created_by,
             'createdByName' => $this->creatorName(),
             'createdAt' => $this->created_at?->toISOString(),

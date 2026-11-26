@@ -65,7 +65,7 @@ test('each status event queues exactly one email to the owner with the reference
     'payment confirmed' => ['payment', fn ($t) => tap(mailBlessing(['payment_status' => 'unpaid', 'amount_due_centavos' => 50000]), fn ($b) => $t->machine->recordPayment($b, 'cs_1', 'pay_1', 50000, 'evt_1')), 'Payment Received'],
     'full refund' => ['refund', fn ($t) => tap(mailBlessing(['status' => 'cancelled', 'payment_status' => 'refund_due', 'amount_due_centavos' => 50000, 'amount_paid_centavos' => 50000]), fn ($b) => $t->machine->markRefunded($b, $t->staff, 'REF-1')), 'Refund processed'],
     'partial refund' => ['partial', fn ($t) => tap(mailBlessing(['payment_status' => 'paid', 'amount_due_centavos' => 50000, 'amount_paid_centavos' => 80000]), fn ($b) => $t->machine->recordPartialRefund($b, $t->staff, 'REF-2', 30000)), 'Partial refund processed'],
-    'rescheduled by the office' => ['moved', fn ($t) => tap(mailBlessing(), fn ($b) => $t->machine->rescheduleByStaff($b, $t->staff, '2026-11-12', '14:00', 'Family asked')), 'Booking Rescheduled'],
+    'rescheduled by the office' => ['moved', fn ($t) => tap(mailBlessing(), fn ($b) => $t->machine->rescheduleByStaff($b, $t->staff, '2026-11-12', '14:30', 'Family asked')), 'Booking Rescheduled'],
     'completed' => ['completed', fn ($t) => tap(mailBlessing(['status' => 'approved'], '2026-11-02'), fn ($b) => $t->machine->complete($b, $t->staff)), 'Sacrament recorded'],
 ]);
 
@@ -103,7 +103,7 @@ test('what the person just did themselves, and every staff alert, queue no email
     Mail::fake();
     $booking = mailBlessing(['payment_status' => 'paid', 'amount_due_centavos' => 50000, 'amount_paid_centavos' => 50000, 'status' => 'approved']);
 
-    $this->machine->reschedule($booking, $this->owner, '2026-11-12', '14:00'); // approved: also alerts staff
+    $this->machine->reschedule($booking, $this->owner, '2026-11-12', '14:30'); // approved: also alerts staff
     $this->machine->cancel($booking->fresh(), $this->owner, 'Changed my mind');  // paid: also alerts staff
 
     expect(AppNotification::where('user_id', $this->staff->id)->count())->toBeGreaterThan(0);

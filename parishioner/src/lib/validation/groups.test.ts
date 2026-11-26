@@ -54,6 +54,14 @@ describe('field groups', () => {
     expect(schema.safeParse({ sponsors: [{ ...ok, religion: 'Catholic' }] }).success).toBe(false)
   })
 
+  it('a sponsor needs no address: missing, empty or null all pass', () => {
+    const schema = z.object(sponsorShape(1, 1, 16))
+    const noAddress = { role: 'ninong', firstName: 'Pedro', lastName: 'Reyes', age: 34, religion: 'Roman Catholic' }
+    expect(schema.safeParse({ sponsors: [noAddress] }).success).toBe(true)
+    expect(schema.safeParse({ sponsors: [{ ...noAddress, residence: '' }] }).success).toBe(true)
+    expect(schema.safeParse({ sponsors: [{ ...noAddress, residence: null, residenceLine: null }] }).success).toBe(true)
+  })
+
   it('optional address group still validates the line length', () => {
     const schema = z.object(addressShape('houseMassAddress', false))
     expect(schema.safeParse({}).success).toBe(true)

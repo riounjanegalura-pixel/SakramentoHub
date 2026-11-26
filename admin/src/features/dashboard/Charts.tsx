@@ -19,7 +19,7 @@ interface BarShapeProps {
 /** A navy bar that grows up from the baseline once, with a short stagger. `minHeight` keeps an empty day visible as a sliver. */
 function growBar(widthShare: number, radius: number, minHeight: number, skipEmpty: boolean) {
   return function GrowBar(p: unknown) {
-    const { x = 0, y = 0, width = 0, height = 0, index = 0 } = p as BarShapeProps
+    const { x = 0, y = 0, width = 0, height = 0 } = p as BarShapeProps
     if (skipEmpty && height <= 0) return null
     const h = Math.max(height, minHeight)
     const top = y + height - h
@@ -32,7 +32,7 @@ function growBar(widthShare: number, radius: number, minHeight: number, skipEmpt
         style={{ fill: 'var(--navy)' }}
         initial={false}
         animate={{ y: top, height: h + radius }}
-        transition={{ duration: durations.slow, ease: [...ease], delay: Math.min(index, 13) * 0.025 }}
+        transition={{ duration: durations.base, ease: [...ease] }}
       />
     )
   }

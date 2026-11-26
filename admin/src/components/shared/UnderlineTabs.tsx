@@ -1,13 +1,11 @@
-import { useId } from 'react'
-import * as m from 'motion/react-m'
-import { durations, ease } from '../../lib/motion'
 import { cn } from '../../lib/utils'
 
 export type UnderlineTab<T extends string> = { value: T; label: string; count?: number }
 
 /**
  * The list tabs: words on a hairline, the chosen one underlined in navy with its count beside it.
- * The underline slides between tabs (motion layout animation; reduced motion is handled by MotionConfig).
+ * The underline appears under the chosen tab at once: tabs are switched many times a day, often from the keyboard, and a sliding
+ * indicator is a layout animation that runs on the main thread while the next view loads.
  * Tabs wrap on a narrow screen rather than scrolling sideways.
  */
 export function UnderlineTabs<T extends string>({
@@ -23,7 +21,6 @@ export function UnderlineTabs<T extends string>({
   label: string
   className?: string
 }) {
-  const group = useId()
   return (
     <div role="tablist" aria-label={label} className={cn('flex flex-wrap gap-x-7 gap-y-0 border-b border-line', className)}>
       {tabs.map((tab, i) => {
@@ -53,12 +50,7 @@ export function UnderlineTabs<T extends string>({
             {tab.label}
             {tab.count !== undefined && <span className="text-[13px] tabular-nums text-ink-muted">{tab.count}</span>}
             {active && (
-              <m.span
-                layoutId={`underline-${group}`}
-                aria-hidden="true"
-                transition={{ duration: durations.base, ease: [...ease] }}
-                className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-navy"
-              />
+              <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-[3px] rounded-full bg-navy" />
             )}
           </button>
         )

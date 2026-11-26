@@ -37,7 +37,7 @@ export function VerifyEmailGate() {
   }, [setUser])
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-paper px-6 text-center text-ink">
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-paper px-6 text-center text-ink">
       <MailCheck size={40} aria-hidden="true" className="mb-4 text-navy" />
       <h1 className="font-display text-title font-semibold text-navy">Check your email</h1>
       <p className="mt-2 max-w-sm text-body">

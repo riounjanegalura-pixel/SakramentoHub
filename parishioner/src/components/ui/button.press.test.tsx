@@ -17,7 +17,7 @@ describe('Button press feedback', () => {
   it('wires the press token through the slim motion button', () => {
     render(<Button>Save</Button>)
     expect(screen.getByRole('button')).toBeInTheDocument()
-    expect(seen[0].whileTap).toEqual({ scale: press.scale })
+    expect(seen[0].whileTap).toEqual({ transform: press.transform })
     expect(seen[0].transition).toEqual(press.transition)
   })
 

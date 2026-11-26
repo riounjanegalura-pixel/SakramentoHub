@@ -11,7 +11,7 @@ export function NotFound() {
       <p className="text-body text-ink-muted">The address may be mistyped, or the page may have moved.</p>
       <Link
         to="/"
-        className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-navy px-6 text-body font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-gold px-6 text-body font-semibold text-navy focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
       >
         Go to the home page
       </Link>

@@ -77,7 +77,7 @@ describe('office desk wizard', () => {
     it('needs a name, a PH mobile number and a relationship; the email is optional', async () => {
       const user = userEvent.setup()
       renderDesk('/desk/house-blessing/2')
-      await user.click(await screen.findByRole('button', { name: /continue/i }))
+      await user.click(await screen.findByRole('button', { name: /^next$/i }))
       expect(await screen.findByText('Enter their full name')).toBeInTheDocument()
       expect(screen.getByText('Enter a valid PH mobile number (09XXXXXXXXX)')).toBeInTheDocument()
       expect(screen.getByText(/choose who is receiving the sacrament/i)).toBeInTheDocument()
@@ -86,11 +86,11 @@ describe('office desk wizard', () => {
       await user.type(screen.getByLabelText(/mobile number/i), '09171234567')
       await user.selectOptions(screen.getByLabelText(/who is receiving it/i), 'relative')
       await user.type(screen.getByLabelText(/email/i), 'not-an-email')
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
       expect(await screen.findByText('Enter a valid email address')).toBeInTheDocument()
 
       await user.clear(screen.getByLabelText(/email/i))
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
       // The contact is complete, so the property step follows (the calendar was the first step).
       expect(await screen.findByRole('heading', { name: /what will be blessed/i }, { timeout: 5000 })).toBeInTheDocument()
 
@@ -104,7 +104,7 @@ describe('office desk wizard', () => {
       await user.type(await screen.findByLabelText(/full name/i), 'Mang Tino')
       await user.type(screen.getByLabelText(/mobile number/i), '09181234567')
       await user.selectOptions(screen.getByLabelText(/who is receiving it/i), 'self')
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
       await screen.findByRole('heading', { name: /what will be blessed/i })
       expect(useBookingStore.getState().formData).toMatchObject({ bookingFor: 'self', relationship: null })
     })
@@ -170,14 +170,14 @@ describe('office desk wizard', () => {
       await user.click(screen.getByRole('checkbox', { name: /waive the lead-time rule/i }))
       expect(await screen.findByLabelText(/^reason/i)).toBeInTheDocument()
       // Continue stays enabled; pressing it without a reason says what is missing.
-      expect(screen.getByRole('button', { name: /continue/i })).toBeEnabled()
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      expect(screen.getByRole('button', { name: /^next$/i })).toBeEnabled()
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
       expect(await screen.findByRole('alert')).toHaveTextContent(/choose a date and a time|reason/i)
 
       await user.type(screen.getByLabelText(/^reason/i), 'Moving in tomorrow')
       await waitFor(() => expect(fetchDayAvailability).toHaveBeenCalledWith('house-blessing', slot, expect.objectContaining({ waiveLeadTime: true }), undefined))
       expect(useDeskStore.getState()).toMatchObject({ waiveLeadTime: true, waiveReason: 'Moving in tomorrow' })
-      await waitFor(() => expect(screen.getByRole('button', { name: /continue/i })).toBeEnabled())
+      await waitFor(() => expect(screen.getByRole('button', { name: /^next$/i })).toBeEnabled())
     })
 
     it('walks schedule → contact → property → review at the counter and submits the chosen slot', async () => {
@@ -192,18 +192,18 @@ describe('office desk wizard', () => {
       await screen.findByRole('heading', { name: /choose a date and time/i })
       expect(screen.getByRole('checkbox', { name: /waive the lead-time rule/i })).toBeInTheDocument()
       await user.click(await screen.findByRole('radio', { name: '9:00 AM' }))
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
 
       await user.type(await screen.findByLabelText(/full name/i), 'Aling Rosa Dela Cruz')
       await user.type(screen.getByLabelText(/mobile number/i), '09171234567')
       await user.selectOptions(screen.getByLabelText(/who is receiving it/i), 'relative')
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
 
       await screen.findByRole('heading', { name: /what will be blessed/i })
       await user.click(screen.getByRole('radio', { name: /vehicle/i }))
       await user.type(screen.getByLabelText(/owner's full name/i), 'Aling Rosa')
       await user.type(screen.getByLabelText(/plate number/i), 'NBC 1234')
-      await user.click(screen.getByRole('button', { name: /continue/i }))
+      await user.click(screen.getByRole('button', { name: /^next$/i }))
 
       const submit = await screen.findByRole('button', { name: /submit booking/i })
       await waitFor(() => expect(submit).toBeEnabled())

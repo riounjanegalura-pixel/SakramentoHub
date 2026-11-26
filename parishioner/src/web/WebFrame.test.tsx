@@ -100,7 +100,7 @@ describe('WebFrame', () => {
     const footer = await screen.findByRole('contentinfo')
     expect(await within(footer).findByRole('link', { name: '09123456789' })).toHaveAttribute('href', 'tel:09123456789')
     expect(footer).toHaveTextContent('St. Peter the Apostle Parish')
-    expect(footer).toHaveTextContent('8:00 AM – 5:00 PM')
+    expect(footer).toHaveTextContent('Office hours: 8:00 AM to 5:00 PM')
     expect(within(footer).getByRole('link', { name: 'Privacy' })).toHaveAttribute('href', '/privacy')
     expect(within(footer).getByRole('link', { name: 'Verify a certificate' })).toHaveAttribute('href', '/verify')
   })

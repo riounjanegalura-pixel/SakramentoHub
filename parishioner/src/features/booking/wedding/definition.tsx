@@ -53,10 +53,12 @@ function partyStep(x: Party): WizardStep {
           <h2 className="mb-4 border-t-2 border-navy pt-3 font-display text-[1.375rem] leading-[1.3] font-semibold text-ink">{LABEL[x]}</h2>
           <SectionTabs
             label={`${LABEL[x]} details`}
+            form={form}
             tabs={[
               {
                 id: 'about',
                 label: `About the ${x}`,
+                owns: (k) => k.startsWith(x) && !/^(groom|bride)(Father|Mother|Baptism|Confirmation)/.test(k),
                 hasError: Object.keys(form.formState.errors).some((k) => k.startsWith(x) && !/^(groom|bride)(Father|Mother|Baptism|Confirmation)/.test(k)),
                 content: (
                   <>
@@ -68,6 +70,7 @@ function partyStep(x: Party): WizardStep {
               {
                 id: 'parents',
                 label: 'Parents',
+                owns: (k) => k.startsWith(`${x}Father`) || k.startsWith(`${x}Mother`),
                 hasError: hasError(`${x}Father`, `${x}Mother`),
                 content: (
                   <>
@@ -81,6 +84,7 @@ function partyStep(x: Party): WizardStep {
               {
                 id: 'sacraments',
                 label: 'Sacraments received',
+                owns: (k) => k.startsWith(`${x}Baptism`) || k.startsWith(`${x}Confirmation`),
                 hasError: hasError(`${x}Baptism`, `${x}Confirmation`),
                 content: (
                   <>

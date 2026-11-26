@@ -59,8 +59,8 @@ export function AppShell({ children, showBottomNav = true, header, webFrame, web
   // `data-chrome` scopes the scroll padding (globals.css) to the header and the docked bar actually on screen.
   const chrome = [header ? 'top' : '', showBottomNav ? 'bottom' : ''].filter(Boolean).join(' ')
   return (
-    <div className="min-h-screen bg-paper sm:bg-line/40">
-      <div data-app-shell data-chrome={chrome || undefined} className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-paper">
+    <div className="min-h-dvh bg-paper sm:bg-line/40">
+      <div data-app-shell data-chrome={chrome || undefined} className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col bg-paper">
         {header}
         {/* The scene change (fade and rise) is drawn once by RootLayout, so nothing animates here. */}
         <main id="main" tabIndex={-1} className={`flex-1 outline-none ${showBottomNav ? 'pb-[var(--chrome-bottom)]' : ''}`}>

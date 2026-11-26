@@ -162,7 +162,7 @@ function ContactView({ step }: { step: WizardStep }) {
             <button
               type="button"
               onClick={() => setLinked({ id: candidate.id, fullName: candidate.fullName, email: typed })}
-              className="flex-1 rounded-xl min-h-11 bg-navy hover:bg-navy-deep py-2 font-semibold text-white"
+              className="flex-1 rounded-xl min-h-11 bg-gold hover:bg-gold-press py-2 font-semibold text-navy"
             >
               Yes, link to {candidate.fullName}
             </button>

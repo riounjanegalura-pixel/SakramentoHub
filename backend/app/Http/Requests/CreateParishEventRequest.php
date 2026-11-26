@@ -21,6 +21,8 @@ class CreateParishEventRequest extends FormRequest
             'date' => ['required', 'date'],
             'location' => ['nullable', 'string', 'max:255'],
             'imageUrl' => ['nullable', 'string', 'max:2048'],
+            'durationMinutes' => ['nullable', 'integer', 'between:15,720'],
+            'blocksBookings' => ['nullable', 'boolean'],
             'category' => ['required', Rule::in(config('parish_events.categories'))],
         ];
     }

@@ -15,7 +15,7 @@ export function PaymentReceivedScreen() {
   const { data: parish } = useQuery({ queryKey: ['parish'], queryFn: fetchParishInfo })
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-paper p-6 text-center">
+    <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col items-center justify-center gap-4 bg-paper p-6 text-center">
       {cancelled ? (
         <>
           <ResultMark tone="stop" icon={X} />

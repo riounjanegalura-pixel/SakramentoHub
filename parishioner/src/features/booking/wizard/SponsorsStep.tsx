@@ -11,7 +11,7 @@ interface SponsorRules {
   min: number
   max: number
   minAge: number
-  /** 'principal' = only sponsors[0] must be a Roman Catholic aged 16+ (baptism); 'all' = every sponsor (confirmation). */
+  /** 'principal' = only sponsors[0] must be aged 16+ (baptism); 'all' = every sponsor (confirmation). Religion is never checked: the picker offers every religion. */
   eligibility: 'principal' | 'all' | 'none'
   title: string
   hint: string
@@ -46,7 +46,6 @@ export function sponsorsStep(rules: SponsorRules): WizardStep {
       checked.forEach((s, i) => {
         // A missing value is already reported by the shape; only judge values that are present.
         if (typeof s.age === 'number' && s.age < 16) ctx.addIssue({ code: 'custom', path: ['sponsors', i, 'age'], message: 'Must be at least 16 years old' })
-        if (typeof s.religion === 'string' && s.religion !== 'Roman Catholic') ctx.addIssue({ code: 'custom', path: ['sponsors', i, 'religion'], message: 'Must be Roman Catholic' })
       })
       rules.extraRefine?.(d, ctx)
     },

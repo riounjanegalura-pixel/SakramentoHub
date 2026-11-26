@@ -166,8 +166,8 @@ describe('ServiceDetailScreen', () => {
     renderAt('/services/baptism')
     const start = await screen.findByRole('button', { name: 'Start booking' })
     expect(screen.getByRole('main')).not.toContainElement(start)
-    expect(start.className).toMatch(/bg-navy/)
-    expect(start.className).toMatch(/text-white/)
+    expect(start.className).toMatch(/bg-gold/)
+    expect(start.className).toMatch(/text-navy/)
     expect(start.closest('[data-slot="service-footer"]')?.className).toMatch(/\bfixed\b/)
   })
 

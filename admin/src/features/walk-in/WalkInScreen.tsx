@@ -230,7 +230,7 @@ export function WalkInScreen() {
             <p className="text-ink-muted">{blockers.length} to go</p>
           </div>
           <div aria-hidden="true" className="h-2 overflow-hidden rounded-full bg-paper-deep">
-            <m.div className="h-full rounded-full bg-navy" initial={false} animate={{ width: `${checks.length ? Math.round((doneCount / checks.length) * 100) : 0}%` }} transition={{ duration: durations.base, ease: [...ease] }} />
+            <m.div className="h-full w-full origin-left bg-navy" initial={false} animate={{ transform: `scaleX(${checks.length ? doneCount / checks.length : 0})` }} transition={{ duration: durations.base, ease: [...ease] }} />
           </div>
           <p className="mt-1 text-[13px] font-medium text-ink-muted">Next up</p>
           <ul className="list-disc pl-5 text-[14px] text-ink">

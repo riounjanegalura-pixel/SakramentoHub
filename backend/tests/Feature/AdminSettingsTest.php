@@ -44,7 +44,26 @@ test('parish settings are validated', function (array $payload, string $field) {
     [['workingHoursStart' => '18:00'], 'workingHoursStart'], // after the stored 17:00 end
     [['parishPhone' => 'call us'], 'parishPhone'],
     [['priestName' => ''], 'priestName'],
+    [['slotGapMinutes' => 90], 'slotGapMinutes'],
+    [['massBufferMinutes' => 500], 'massBufferMinutes'],
+    [['officeDays' => []], 'officeDays'],
+    [['officeDays' => [0, 8]], 'officeDays.0'],
+    [['parishEmail' => 'not an email'], 'parishEmail'],
 ]);
+
+test('the office hours, email, gaps and buffer are settings the public parish record shows', function () {
+    $this->actingAs($this->admin)->patchJson('/api/admin/settings/parish', [
+        'officeDays' => [1, 2, 3], 'parishEmail' => 'office@example.org', 'slotGapMinutes' => 10, 'massBufferMinutes' => 20,
+    ])->assertOk()->assertJsonPath('officeDays', [1, 2, 3])->assertJsonPath('parishEmail', 'office@example.org')
+        ->assertJsonPath('slotGapMinutes', 10)->assertJsonPath('massBufferMinutes', 20);
+
+    $this->getJson('/api/parish')->assertOk()->assertJsonPath('officeDays', [1, 2, 3])->assertJsonPath('email', 'office@example.org');
+});
+
+test('a fresh parish record has office days and no made-up email', function () {
+    $this->getJson('/api/parish')->assertOk()->assertJsonPath('officeDays', [2, 3, 4, 5, 6])->assertJsonPath('email', null);
+    expect(ParishSetting::slotGapMinutes())->toBe(0)->and(ParishSetting::massBufferMinutes())->toBe(15);
+});
 
 test('admin edits a service and the scheduler obeys it', function () {
     $this->actingAs($this->admin)->patchJson('/api/admin/settings/services/house-blessing', ['leadTimeDays' => 0, 'allowedWeekdays' => [1, 2, 3]])

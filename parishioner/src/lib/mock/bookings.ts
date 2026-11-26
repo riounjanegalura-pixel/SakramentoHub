@@ -1,3 +1,4 @@
+import { MOCK_PARISH_PHONE } from './parish'
 import { simulateLatency, simulateFailure, getFailureRate } from './latency'
 import { SERVICES } from './services'
 import { mockDayStatus, endTime, holdsReturnedSlot } from './availability'
@@ -141,7 +142,7 @@ export async function cancelBooking(id: string, reason: string): Promise<Booking
   const b = find(id)
   if (!['draft', 'submitted', 'returned', 'approved'].includes(b.status)) throw new Error("This booking can't be cancelled from its current state.")
   if (pastChangeCutoff(b)) {
-    throw new Error('Approved bookings can only be cancelled online until 3 days before the appointment. Please call the parish office at 09123456789.')
+    throw new Error(`Approved bookings can only be cancelled online until 3 days before the appointment. Please call the parish office at ${MOCK_PARISH_PHONE}.`)
   }
   const paymentStatus = b.paymentStatus === 'paid' ? 'refund_due' : b.paymentStatus === 'unpaid' || b.paymentStatus === 'pending_cash' ? 'void' : b.paymentStatus
   return save({ ...withStatus(b, 'cancelled'), paymentStatus, statusReason: reason, paymentHoldExpiresAt: null })
@@ -152,7 +153,7 @@ export async function rescheduleBooking(id: string, appointmentDate: string, app
   const b = find(id)
   if (b.status !== 'submitted' && b.status !== 'approved') throw new Error('Only a submitted or approved booking can be rescheduled.')
   if (pastChangeCutoff(b)) {
-    throw new Error('Approved bookings can only be rescheduled online until 3 days before the appointment. Please call the parish office at 09123456789.')
+    throw new Error(`Approved bookings can only be rescheduled online until 3 days before the appointment. Please call the parish office at ${MOCK_PARISH_PHONE}.`)
   }
   const day = mockDayStatus(b.sacrament, appointmentDate, context(b), b.id)
   if (day.status === 'unavailable') throw new Error(day.reason ?? 'That date is not available.')

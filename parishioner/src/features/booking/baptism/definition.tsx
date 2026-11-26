@@ -1,5 +1,5 @@
 // parishioner/src/features/booking/baptism/definition.tsx
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { z } from 'zod'
 import { FormField } from '../../../components/shared/FormField'
 import { AddressFields } from '../../../components/fields/AddressFields'
@@ -74,8 +74,6 @@ const parentsStep: WizardStep = {
     fatherOmittedReason: z.string().max(255).nullish(),
     ...loose(personShape('father', { placeOfBirth: true })),
     fatherReligion: z.any().optional(),
-    motherOmitted: z.boolean().nullish(),
-    motherOmittedReason: z.string().max(255).nullish(),
     ...loose(personShape('mother', { placeOfBirth: true })),
     motherReligion: z.any().optional(),
     ...addressShape('parentsResidence'),
@@ -88,22 +86,29 @@ const parentsStep: WizardStep = {
     } else {
       refineWith(ctx, fatherStrict, d)
     }
+    // The mother can never be left out: her details are always asked for.
     if (d.motherOmitted === true) {
-      if (!String(d.motherOmittedReason ?? '').trim()) {
-        ctx.addIssue({ code: 'custom', path: ['motherOmittedReason'], message: "Tell us briefly why the mother's details are left out" })
-      }
-    } else {
-      refineWith(ctx, motherStrict, d)
+      ctx.addIssue({ code: 'custom', path: ['motherOmitted'], message: "The mother's details cannot be left out" })
     }
+    refineWith(ctx, motherStrict, d)
   },
   clears: (d) => [
     ...(d.fatherOmitted === true ? parentKeys('father') : ['fatherOmittedReason']),
-    ...(d.motherOmitted === true ? parentKeys('mother') : ['motherOmittedReason']),
+    // An older draft may still carry the removed "leave the mother out" answer: drop it.
+    'motherOmitted',
+    'motherOmittedReason',
   ],
   Component: function ParentsView({ step }) {
     const { form, onContinue } = useStepForm(step)
     const omitted = form.watch('fatherOmitted') === true
-    const motherOmitted = form.watch('motherOmitted') === true
+    // A draft saved before the choice was removed may still say the mother is left out: there is no checkbox to undo it,
+    // so it is cleared here and her tab simply asks for her details.
+    useEffect(() => {
+      if (form.getValues('motherOmitted') === true) {
+        form.setValue('motherOmitted', false)
+        form.setValue('motherOmittedReason', undefined)
+      }
+    }, [form])
     const err = (k: string) => fieldError(form.formState.errors, k)
     const reasonOptions = OMIT_REASONS.map((r) => ({ value: r, label: r }))
     const { getValues, setValue } = form
@@ -116,7 +121,6 @@ const parentsStep: WizardStep = {
         if (v !== undefined && v !== '' && !getValues(k)) setValue(k, v, { shouldDirty: true })
       }
       if (who === 'father') setValue('fatherOmitted', false)
-      else setValue('motherOmitted', false)
       setFilledAs(who)
     }
     const roles: Array<'father' | 'mother'> = user?.sex === 'male' ? ['father'] : user?.sex === 'female' ? ['mother'] : ['father', 'mother']
@@ -136,13 +140,14 @@ const parentsStep: WizardStep = {
             {filledAs && <p role="status" className="text-sm text-ink-muted">Filled in from your profile. Check the {filledAs}'s tab and change anything that is not right.</p>}
           </div>
         )}
-        {err('motherOmitted') && <p role="alert" className="mb-3 text-sm font-medium text-danger">{err('motherOmitted')}</p>}
         <SectionTabs
           label="Parents"
+          form={form}
           tabs={[
             {
               id: 'father',
               label: 'Father',
+              owns: (k) => k.startsWith('father'),
               hasError: errIn('father'),
               content: (
                 <>
@@ -161,24 +166,14 @@ const parentsStep: WizardStep = {
             {
               id: 'mother',
               label: 'Mother',
+              owns: (k) => k.startsWith('mother'),
               hasError: errIn('mother'),
-              content: (
-                <>
-                  <label htmlFor="motherOmitted" className="mb-3 flex min-h-11 items-center gap-3 text-body text-ink">
-                    <input id="motherOmitted" type="checkbox" className="size-6 shrink-0" {...form.register('motherOmitted')} />
-                    Leave out the mother's details
-                  </label>
-                  {motherOmitted ? (
-                    <SelectField id="motherOmittedReason" label="Reason" required options={reasonOptions} {...form.register('motherOmittedReason')} error={err('motherOmittedReason')} />
-                  ) : (
-                    <PersonFields form={form} prefix="mother" legend="Mother" options={{ ...parentOptions, fixedSex: 'female' }} lastNameLabel="Maiden last name" />
-                  )}
-                </>
-              ),
+              content: <PersonFields form={form} prefix="mother" legend="Mother" options={{ ...parentOptions, fixedSex: 'female' }} lastNameLabel="Maiden last name" />,
             },
             {
               id: 'residence',
               label: 'Family residence',
+              owns: (k) => k.startsWith('parentsResidence'),
               hasError: errIn('parentsResidence'),
               content: <AddressFields form={form} name="parentsResidence" label="Family residence" />,
             },
@@ -189,14 +184,13 @@ const parentsStep: WizardStep = {
   },
   review: (d) => {
     const omitted = d.fatherOmitted === true
-    const motherOmitted = d.motherOmitted === true
     return rows([
       ['Father', omitted ? `Not included (${d.fatherOmittedReason ?? ''})` : personName(d, 'father')],
       ["Father's place of birth", omitted ? undefined : d.fatherPlaceOfBirth],
       ["Father's religion", omitted ? undefined : d.fatherReligion],
-      ['Mother', motherOmitted ? `Not included (${d.motherOmittedReason ?? ''})` : personName(d, 'mother')],
-      ["Mother's place of birth", motherOmitted ? undefined : d.motherPlaceOfBirth],
-      ["Mother's religion", motherOmitted ? undefined : d.motherReligion],
+      ['Mother', personName(d, 'mother')],
+      ["Mother's place of birth", d.motherPlaceOfBirth],
+      ["Mother's religion", d.motherReligion],
       ['Residence', addressText(d, 'parentsResidence')],
     ])
   },
@@ -259,7 +253,7 @@ export const baptismWizard: WizardDefinition = {
       eligibility: 'principal',
       title: 'Godparents',
       noun: 'Godparent',
-      hint: 'Add each Ninong and Ninang. The first one listed is the principal godparent: at least 16 and Roman Catholic. The fee is ₱50 per godparent.',
+      hint: 'Add each Ninong and Ninang. The first one listed is the principal godparent: at least 16. The fee is ₱50 per godparent.',
     }),
     documentsStep([
       { key: 'birthCertificate', label: 'PSA birth certificate', required: false },

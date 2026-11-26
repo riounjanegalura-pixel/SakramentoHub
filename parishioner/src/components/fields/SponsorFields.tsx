@@ -87,7 +87,7 @@ export function SponsorFields({ form, min, max, hint }: SponsorFieldsProps) {
               {...register(`${base}.religion`)}
               error={err(`${base}.religion`)}
             />
-            <AddressFields form={form} name={`${base}.residence`} label="Residence" />
+            <AddressFields form={form} name={`${base}.residence`} label="Residence" required={false} />
           </fieldset>
         )
       })}

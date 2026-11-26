@@ -293,6 +293,14 @@ export interface DayAvailability {
 }
 
 // ---- Settings (GET /admin/settings) ----
+/** One fixed weekly Mass: no sacrament is offered at these times. A first-Friday row has no weekdays. */
+export interface MassRow {
+  label: string
+  time: string
+  durationMinutes: number
+  weekdays: number[]
+  firstFriday: boolean
+}
 export interface ParishSettings {
   parishName: string
   parishAddress: string
@@ -305,6 +313,16 @@ export interface ParishSettings {
   lunchEnd: string
   slotStepMinutes: number
   travelBufferMinutes: number
+  /** The days the office is open (ISO weekdays, Monday = 1), shown to parishioners as office hours. */
+  officeDays: number[]
+  /** The public contact email, or null for none. */
+  parishEmail: string | null
+  /** Spare minutes between two visits, so back-to-back times never crowd each other. */
+  slotGapMinutes: number
+  /** Quiet minutes kept before and after every Mass. */
+  massBufferMinutes: number
+  /** The fixed weekly Masses. */
+  massSchedule: MassRow[]
   /** Printed under the priest's name in the certificate signature block. */
   priestTitle: string
   /** A PNG or JPEG data URL printed above the signature line, or null for none. */
@@ -418,6 +436,10 @@ export interface ParishEvent {
 }
 
 export interface AdminParishEvent extends ParishEvent {
+  /** How long the event runs, in minutes. */
+  durationMinutes: number
+  /** While true, no sacrament is offered during the event. */
+  blocksBookings: boolean
   createdBy: string | null
   createdByName: string | null
   createdAt: string

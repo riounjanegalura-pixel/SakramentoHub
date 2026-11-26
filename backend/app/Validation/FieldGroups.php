@@ -101,7 +101,8 @@ final class FieldGroups
             'sponsors.*.lastName' => ['required', ...self::NAME],
             'sponsors.*.age' => ['required', 'integer', "min:{$minAge}", 'max:120'],
             'sponsors.*.religion' => ['required', Rule::in(self::RELIGIONS)],
-            'sponsors.*.residence' => ['required', 'string', 'max:255'],
+            // A sponsor's address is optional: the office does not need it to record the sponsor.
+            'sponsors.*.residence' => ['nullable', 'string', 'max:255'],
             'sponsors.*.residenceLine' => ['nullable', 'string', 'max:255'],
             'sponsors.*.residenceRegionCode' => ['nullable', 'string', 'max:20'],
             'sponsors.*.residenceProvinceCode' => ['nullable', 'string', 'max:20'],

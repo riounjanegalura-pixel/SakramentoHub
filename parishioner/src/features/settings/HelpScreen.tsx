@@ -5,6 +5,8 @@ import * as m from 'motion/react-m'
 import { AppShell } from '../../components/shared/AppShell'
 import { AppHeader } from '../../components/shared/AppHeader'
 import { EmergencyCallRow } from '../../components/shared/EmergencyCallRow'
+import { officeHoursText } from '../../lib/domain'
+import type { ParishInfo } from '../../lib/types'
 import { useParishInfo } from '../../lib/useParishInfo'
 
 const FAQS = [
@@ -21,18 +23,24 @@ const FAQS = [
   {
     question: 'Who can I contact for more help?',
     answer:
-      'You can reach the St. Peter the Apostle Parish office through the following: Visit us at the parish office during office hours (Tuesday–Saturday, 8AM–5PM), {CALL}or email us at parish@stpeterapostle.org. You can also approach any parish staff after Mass for assistance.',
+      'You can reach the parish office through the following: visit us at the parish office during office hours{HOURS}{CONTACT}. You can also approach any parish staff after Mass for assistance.',
   },
   {
     question: 'How can I donate?',
     answer:
-      'You can make a donation in person at the parish office during office hours (Tuesday–Saturday, 8AM–5PM), or hand it to any parish staff after Mass. Ask the office about current parish projects your donation can support.',
+      'You can make a donation in person at the parish office during office hours{HOURS}, or hand it to any parish staff after Mass. Ask the office about current parish projects your donation can support.',
   },
 ]
 
-/** The contact answer takes its number from the parish record, never from a copy typed here. */
-function answerText(answer: string, phone: string | undefined): string {
-  return answer.replace('{CALL}', phone ? `call us at ${phone}, ` : '')
+/**
+ * The answers take the office hours, number and email from the parish record, never from copy typed here.
+ * With nothing on file a placeholder simply drops out, so the text never shows a wrong or empty detail.
+ */
+function answerText(answer: string, parish: ParishInfo | undefined): string {
+  const hours = parish?.workingHours ? ` (${officeHoursText(parish)})` : ''
+  const ways = [parish?.phone && `call us at ${parish.phone}`, parish?.email && `email us at ${parish.email}`].filter(Boolean)
+  const contact = ways.length > 0 ? `, ${ways.join(' or ')}` : ''
+  return answer.replace('{HOURS}', hours).replace('{CONTACT}', contact)
 }
 
 export function HelpScreen() {
@@ -70,8 +78,8 @@ export function HelpScreen() {
                   </button>
                 </h3>
                 {isOpen && (
-                  <p id={`faq-panel-${i}`} className="px-4 pb-4 text-body leading-relaxed text-ink">
-                    {answerText(answer, parish?.phone)}
+                  <p id={`faq-panel-${i}`} className="px-4 pb-4 text-body leading-relaxed text-ink [overflow-wrap:anywhere]">
+                    {answerText(answer, parish)}
                   </p>
                 )}
               </li>

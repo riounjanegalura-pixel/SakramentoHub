@@ -14,9 +14,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-navy text-white hover:bg-navy-deep active:bg-navy-deep",
+        // The one accent on a screen: gold with navy text (6.7:1). Navy stays the structure colour (headings, header, selection); gold is the 10% you find at a squint.
+        default: "bg-gold text-navy hover:bg-gold-press active:bg-gold-press",
         // Kept as an alias of default so existing call sites keep compiling; new code uses default.
-        navy: "bg-navy text-white hover:bg-navy-deep active:bg-navy-deep",
+        navy: "bg-gold text-navy hover:bg-gold-press active:bg-gold-press",
         outline:
           "border border-line bg-surface text-navy hover:bg-paper active:bg-paper",
         secondary: "border border-line bg-paper text-navy hover:bg-line/40",
@@ -75,7 +76,7 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={classes}
-      whileTap={props.disabled || loading ? undefined : { scale: press.scale }}
+      whileTap={props.disabled || loading ? undefined : { transform: press.transform }}
       transition={press.transition}
       {...(props as React.ComponentProps<typeof m.button>)}
       disabled={props.disabled || loading}

@@ -249,6 +249,10 @@ export interface ParishInfo {
   address?: string
   priestName: string
   workingHours: { start: string; end: string }
+  /** The days the office is open (ISO weekdays, Monday = 1). */
+  officeDays?: number[]
+  /** The parish's public email, when the office set one. */
+  email?: string | null
   /** No visit starts in or runs through this break. */
   lunchBreak?: { start: string; end: string }
   /** Demo only: after a real PayMongo payment the app asks the payer to verify their mobile number with an SMS code. */

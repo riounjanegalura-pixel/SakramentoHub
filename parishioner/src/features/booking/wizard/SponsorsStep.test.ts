@@ -12,9 +12,12 @@ describe('sponsorsStep', () => {
   it('reports only the fields that have a value but fail the rule', () => {
     const step = sponsorsStep(base)
     expect(run(step, { sponsors: [{}] })).toEqual([])
-    expect(run(step, { sponsors: [{ age: 12, religion: 'Islam' }] })).toEqual([
-      'sponsors.0.age', 'sponsors.0.religion',
-    ])
+    expect(run(step, { sponsors: [{ age: 12 }] })).toEqual(['sponsors.0.age'])
+  })
+
+  it('never judges a sponsor by religion', () => {
+    const step = sponsorsStep(base)
+    expect(run(step, { sponsors: [{ age: 30, religion: 'Protestant' }, { age: 30, religion: 'Islam' }] })).toEqual([])
   })
 
   it('labels review rows with the noun, defaulting to Sponsor', () => {

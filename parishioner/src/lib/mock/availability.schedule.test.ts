@@ -80,3 +80,21 @@ describe('mockDayStatus', () => {
     expect(mockDayStatus('funeral', date).freeStarts).not.toContain('10:00')
   })
 })
+
+describe('the demo calendar offers visits one after another', () => {
+  // A Tuesday far enough ahead for every lead time.
+  const tuesday = '2027-03-02'
+
+  it('never offers two times that overlap, with lunch skipped', () => {
+    expect(mockDayStatus('baptism', tuesday).freeStarts).toEqual(['08:00', '08:45', '09:30', '10:15', '11:00', '13:00', '13:45', '14:30', '15:15', '16:00'])
+    expect(mockDayStatus('wedding', tuesday).freeStarts).toEqual(['08:00', '09:30', '13:00', '14:30'])
+  })
+
+  it('closes the times around the posted Mass', () => {
+    const sunday = '2027-03-07'
+    const starts = mockDayStatus('funeral', sunday).freeStarts
+    expect(starts).not.toContain('08:00')
+    expect(starts).not.toContain('16:00')
+    expect(starts).toContain('15:00')
+  })
+})
