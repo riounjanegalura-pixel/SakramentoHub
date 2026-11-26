@@ -48,18 +48,28 @@ class LiturgicalCalendar
             }
         }
 
-        $row = BlackoutDate::whereDate('date', $date)->get()->first(fn (BlackoutDate $b) => $b->appliesTo($sacrament));
+        // Only a whole-day closure shuts the day; one with a time window just closes that window (see timedClosures).
+        $row = BlackoutDate::whereDate('date', $date)->get()->first(fn (BlackoutDate $b) => ! $b->isTimed() && $b->appliesTo($sacrament));
 
         return $row?->reason;
     }
 
-    /** Every closure on a date, for display. @return list<array{reason: string, appliesTo: string}> */
+    /** The time windows closed on a date for one sacrament, as minutes from midnight. @return list<array{0:int,1:int}> */
+    public function timedClosures(string $date, string $sacrament): array
+    {
+        return BlackoutDate::whereDate('date', $date)->get()
+            ->filter(fn (BlackoutDate $b) => $b->isTimed() && $b->appliesTo($sacrament))
+            ->map(fn (BlackoutDate $b) => $b->window())
+            ->values()->all();
+    }
+
+    /** Every closure on a date, for display. start/end are "HH:MM" for a timed closure, null for the whole day. @return list<array{reason: string, appliesTo: string, start: ?string, end: ?string}> */
     public function notesFor(string $date, ?\Illuminate\Support\Collection $names = null, ?iterable $blackouts = null): array
     {
         $notes = [];
         $triduum = $this->triduum((int) substr($date, 0, 4));
         if (isset($triduum[$date])) {
-            $notes[] = ['reason' => $triduum[$date], 'appliesTo' => 'All services except Anointing of the Sick'];
+            $notes[] = ['reason' => $triduum[$date], 'appliesTo' => 'All services except Anointing of the Sick', 'start' => null, 'end' => null];
         }
 
         $names ??= \App\Models\Service::pluck('name', 'id');
@@ -69,6 +79,8 @@ class LiturgicalCalendar
                 'appliesTo' => $row->sacraments === null
                     ? 'All services'
                     : implode(', ', array_map(fn ($s) => $names[$s] ?? $s, $row->sacraments)),
+                'start' => $row->isTimed() ? $row->start_time : null,
+                'end' => $row->isTimed() ? $row->end_time : null,
             ];
         }
 

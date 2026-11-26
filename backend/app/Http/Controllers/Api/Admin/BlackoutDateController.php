@@ -28,6 +28,9 @@ class BlackoutDateController extends Controller
             'date' => ['required', 'date_format:Y-m-d'],
             'endDate' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date'],
             'reason' => ['required', 'string', 'min:3', 'max:120'],
+            // Optional time window. Both or neither; with neither the whole day is closed.
+            'startTime' => ['nullable', 'date_format:H:i', 'required_with:endTime'],
+            'endTime' => ['nullable', 'date_format:H:i', 'required_with:startTime', 'after:startTime'],
             'sacraments' => ['nullable', 'array', 'min:1'],
             'sacraments.*' => ['string', 'distinct', Rule::exists('services', 'id')],
         ]);
@@ -40,27 +43,35 @@ class BlackoutDateController extends Controller
 
         $reason = trim($request->string('reason')->toString());
         $sacraments = $request->input('sacraments');
+        $startTime = $request->input('startTime');
+        $endTime = $request->input('endTime');
         $created = [];
         $dates = [];
         for ($day = $start; $day->lte($end); $day = $day->addDay()) {
             $dates[] = $date = $day->toDateString();
             $exists = BlackoutDate::whereDate('date', $date)->where('reason', $reason)->get()
-                ->contains(fn (BlackoutDate $b) => $b->sacraments == $sacraments);
+                ->contains(fn (BlackoutDate $b) => $b->sacraments == $sacraments && $b->start_time === $startTime && $b->end_time === $endTime);
             if (! $exists) {
-                $created[] = BlackoutDate::create(['date' => $date, 'reason' => $reason, 'sacraments' => $sacraments]);
+                $created[] = BlackoutDate::create(['date' => $date, 'reason' => $reason, 'start_time' => $startTime, 'end_time' => $endTime, 'sacraments' => $sacraments]);
             }
         }
 
         if ($created !== []) {
             $audit->record($request->user(), 'blackout.created', 'blackout_date', (string) $created[0]->id,
-                ['from' => $start->toDateString(), 'to' => $end->toDateString(), 'reason' => $reason, 'sacraments' => $sacraments]);
+                ['from' => $start->toDateString(), 'to' => $end->toDateString(), 'reason' => $reason, 'startTime' => $startTime, 'endTime' => $endTime, 'sacraments' => $sacraments]);
         }
 
-        // Existing appointments are kept; staff are shown who to call or move.
+        // Existing appointments are kept; staff are shown who to call or move. A timed closure only touches visits that overlap its window.
+        $window = $startTime !== null ? [$this->minutes($startTime), $this->minutes($endTime)] : null;
         $affected = Booking::holdingSlot()->with('user')
             ->whereIn(DB::raw('substr(appointment_date, 1, 10)'), $dates)
             ->when($sacraments !== null, fn ($q) => $q->whereIn('sacrament', $sacraments))
             ->orderBy('appointment_date')->orderBy('appointment_start')->get()
+            ->when($window !== null, fn ($rows) => $rows->filter(
+                fn (Booking $b) => $b->appointment_start !== null
+                    && $this->minutes($b->appointment_start) < $window[1]
+                    && $window[0] < $this->minutes($b->appointment_end ?? $b->appointment_start),
+            ))
             ->map(fn (Booking $b) => [
                 'id' => $b->id, 'referenceNumber' => $b->reference_number, 'sacrament' => $b->sacrament, 'subjectName' => $b->subjectName(),
                 'appointmentDate' => $b->appointmentDateString(), 'appointmentStart' => $b->appointment_start,
@@ -80,6 +91,16 @@ class BlackoutDateController extends Controller
 
     private function shape(BlackoutDate $b): array
     {
-        return ['id' => (int) $b->id, 'date' => $b->date->toDateString(), 'reason' => $b->reason, 'sacraments' => $b->sacraments];
+        return [
+            'id' => (int) $b->id, 'date' => $b->date->toDateString(), 'reason' => $b->reason,
+            'startTime' => $b->start_time, 'endTime' => $b->end_time, 'sacraments' => $b->sacraments,
+        ];
+    }
+
+    private function minutes(string $time): int
+    {
+        [$h, $m] = array_map('intval', explode(':', $time));
+
+        return $h * 60 + $m;
     }
 }

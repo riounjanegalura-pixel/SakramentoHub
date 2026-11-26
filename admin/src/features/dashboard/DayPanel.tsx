@@ -5,6 +5,7 @@ import { Skeleton } from '../../components/shared/Skeleton'
 import { formatTime } from '../../lib/domain'
 import type { ScheduleDay } from '../../lib/types'
 import { cn } from '../../lib/utils'
+import { isClosed } from './MonthGrid'
 import { RIBBON_SPAN, RIBBON_START, ribbonPct, type DayModel, type VisitRow, type VisitState } from './dashboardModel'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
@@ -205,7 +206,7 @@ export function DayPanel({
           {closed.length > 0 && (
             <p role="note" className="mb-3.5 flex items-center gap-2 rounded-xl bg-paper-deep px-3.5 py-2.5 text-[14px] text-ink">
               <CalendarX2 size={16} aria-hidden="true" className="shrink-0" />
-              Closed: {closed.map((b) => b.reason).join('; ')}
+              Closed: {closed.map((b) => (b.start && b.end ? `${b.reason}, ${formatTime(b.start)} to ${formatTime(b.end)}` : b.reason)).join('; ')}
             </p>
           )}
           {/* A day with no visits is one line, not an empty timeline. */}
@@ -255,7 +256,7 @@ export function WeekStrip({
       <div role="group" aria-label="This week" className="grid flex-1 grid-cols-7 gap-0.5">
         {days.map((d, i) => {
           const day = byDate.get(d)
-          const closed = !!day && day.blackouts.length > 0
+          const closed = isClosed(day)
           const sel = d === selected
           const n = day ? day.items.filter((x) => x.type === 'booking').length : 0
           return (

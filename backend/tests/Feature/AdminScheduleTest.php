@@ -52,14 +52,14 @@ test('a blackout is shown and a booking already on that day still appears', func
     BlackoutDate::create(['date' => '2026-11-05', 'reason' => 'Bishop visit', 'sacraments' => ['wedding', 'baptism']]);
 
     $json = $this->actingAs($this->staff)->getJson('/api/admin/schedule?start=2026-11-04&end=2026-11-05')->json();
-    expect(scheduleDay($json, '2026-11-04')['blackouts'])->toBe([['reason' => 'Parish fiesta', 'appliesTo' => 'All services']])
+    expect(scheduleDay($json, '2026-11-04')['blackouts'])->toBe([['reason' => 'Parish fiesta', 'appliesTo' => 'All services', 'start' => null, 'end' => null]])
         ->and(collect(scheduleDay($json, '2026-11-04')['items'])->where('type', 'booking'))->toHaveCount(1)
         ->and(scheduleDay($json, '2026-11-05')['blackouts'][0]['appliesTo'])->toBe('Wedding, Baptism');
 });
 
 test('the Easter Triduum is marked', function () {
     $json = $this->actingAs($this->staff)->getJson('/api/admin/schedule?start=2027-03-25&end=2027-03-27')->json(); // Easter 2027 = Mar 28
-    expect(scheduleDay($json, '2027-03-26')['blackouts'])->toBe([['reason' => 'Good Friday', 'appliesTo' => 'All services except Anointing of the Sick']]);
+    expect(scheduleDay($json, '2027-03-26')['blackouts'])->toBe([['reason' => 'Good Friday', 'appliesTo' => 'All services except Anointing of the Sick', 'start' => null, 'end' => null]]);
 });
 
 test('open emergency anointings are listed as unscheduled', function () {

@@ -8,14 +8,17 @@ export function visitCount(day: ScheduleDay | undefined): number {
   return day ? day.items.filter((i) => i.type === 'booking').length : 0
 }
 
+/** A closure with a time window shuts only part of the day, so it does not strike the day through. */
+const wholeDay = (day: ScheduleDay) => day.blackouts.filter((b) => !b.start)
+
 export function isClosed(day: ScheduleDay | undefined): boolean {
-  return !!day && day.blackouts.length > 0
+  return !!day && wholeDay(day).length > 0
 }
 
 function cellLabel(date: string, day: ScheduleDay | undefined): string {
   const name = new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', timeZone: 'UTC' })
   const n = visitCount(day)
-  const closed = isClosed(day) ? `, parish closed: ${day!.blackouts.map((b) => b.reason).join('; ')}` : ''
+  const closed = isClosed(day) ? `, parish closed: ${wholeDay(day!).map((b) => b.reason).join('; ')}` : ''
   return `${name}${closed}${n > 0 ? `, ${n} ${n === 1 ? 'visit' : 'visits'}` : ''}`
 }
 

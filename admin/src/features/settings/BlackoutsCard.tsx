@@ -17,7 +17,8 @@ import { fadeUp, staggerDelay } from '../../lib/motion'
 import type { AdminService, BlackoutResult, Sacrament } from '../../lib/types'
 
 const FOCUS = 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus'
-const CARD = 'rounded-2xl border border-line bg-surface p-5 md:p-6'
+const FOCUS_WITHIN = 'has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus rounded-lg'
+const CARD ='rounded-2xl border border-line bg-surface p-5 md:p-6'
 const H2 = 'font-display text-heading font-semibold text-navy'
 const PAGE = 10
 const HATCH = 'repeating-linear-gradient(135deg, rgb(163 38 28 / .45) 0 1.5px, transparent 1.5px 6px)'
@@ -80,6 +81,11 @@ export function BlackoutsCard({ services, triduum }: { services: AdminService[];
   const [endDate, setEndDate] = useState('')
   const [reason, setReason] = useState('')
   const [chosen, setChosen] = useState<Sacrament[]>([])
+  // Whole day and every service are the plain defaults; each is a visible switch, never an empty field that means "all".
+  const [allServices, setAllServices] = useState(true)
+  const [allDay, setAllDay] = useState(true)
+  const [startTime, setStartTime] = useState('')
+  const [endTime, setEndTime] = useState('')
   const [result, setResult] = useState<BlackoutResult | null>(null)
   const [removed, setRemoved] = useState(false)
   const [pendingDelete, setPendingDelete] = useState<{ id: number; reason: string } | null>(null)
@@ -94,7 +100,13 @@ export function BlackoutsCard({ services, triduum }: { services: AdminService[];
 
   const add = useMutation({
     mutationFn: () =>
-      createBlackouts({ date, ...(endDate ? { endDate } : {}), reason: reason.trim(), sacraments: chosen.length > 0 ? chosen : null }),
+      createBlackouts({
+        date,
+        ...(endDate ? { endDate } : {}),
+        reason: reason.trim(),
+        ...(allDay ? {} : { startTime, endTime }),
+        sacraments: allServices ? null : chosen,
+      }),
     onSuccess: (res) => {
       setResult(res)
       setRemoved(false)
@@ -102,6 +114,10 @@ export function BlackoutsCard({ services, triduum }: { services: AdminService[];
       setEndDate('')
       setReason('')
       setChosen([])
+      setAllServices(true)
+      setAllDay(true)
+      setStartTime('')
+      setEndTime('')
       refresh()
     },
   })
@@ -117,6 +133,10 @@ export function BlackoutsCard({ services, triduum }: { services: AdminService[];
   })
 
   const scope = (s: Sacrament[] | null) => (s === null ? 'All services' : s.map((id) => names.get(id) ?? id).join(', '))
+  const when = (b: { startTime: string | null; endTime: string | null }) => (b.startTime && b.endTime ? `${formatTime(b.startTime)} to ${formatTime(b.endTime)}` : 'All day')
+  const timeError = !allDay && !!startTime && !!endTime && endTime <= startTime ? 'Closing time must be after the opening time.' : null
+  const ready =
+    !!date && reason.trim().length >= 3 && (allDay || (!!startTime && !!endTime && !timeError)) && (allServices || chosen.length > 0)
   const affected = result?.affectedBookings.length ?? 0
   const all = list.data ?? []
   const pageCount = Math.max(1, Math.ceil(all.length / PAGE))
@@ -196,32 +216,58 @@ export function BlackoutsCard({ services, triduum }: { services: AdminService[];
             <Field id="blackout-reason" label="Reason" required className="sm:col-span-2">
               <Input maxLength={120} value={reason} onChange={(e) => setReason(e.target.value)} />
             </Field>
-            <fieldset role="group" aria-label="Applies to" className="sm:col-span-2">
-              <legend className="mb-1.5 text-sm font-medium text-ink">
-                Applies to <span className="font-normal text-ink-muted">(leave all unticked to close every service)</span>
-              </legend>
-              <div className="flex flex-wrap gap-2">
-                {services.map((s) => {
-                  const on = chosen.includes(s.id)
-                  return (
-                    <label
-                      key={s.id}
-                      className={`relative inline-flex min-h-11 cursor-pointer items-center rounded-xl px-3.5 text-[14px] text-navy has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${on ? 'border-2 border-navy bg-status-confirmed-bg px-[13px] font-semibold' : 'border border-input-border bg-surface font-medium'}`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={on}
-                        onChange={(e) => setChosen(e.target.checked ? [...chosen, s.id] : chosen.filter((c) => c !== s.id))}
-                        className="absolute inset-0 size-full cursor-pointer opacity-0"
-                      />
-                      {s.name}
-                    </label>
-                  )
-                })}
-              </div>
+            <fieldset role="group" aria-label="Time of day" className="flex flex-col gap-3 sm:col-span-2">
+              <legend className="mb-1.5 text-sm font-medium text-ink">Time of day</legend>
+              <label className={`inline-flex min-h-11 cursor-pointer items-center gap-2.5 text-[14px] font-medium text-ink ${FOCUS_WITHIN}`}>
+                <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-5 accent-navy" />
+                All day
+              </label>
+              {!allDay && (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field id="blackout-start-time" label="Closed from" required>
+                    <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+                  </Field>
+                  <Field id="blackout-end-time" label="Closed until" required>
+                    <Input type="time" value={endTime} min={startTime || undefined} onChange={(e) => setEndTime(e.target.value)} />
+                  </Field>
+                  {timeError && <p role="alert" className="text-sm font-medium text-danger sm:col-span-2">{timeError}</p>}
+                  <p className="text-[13px] text-ink-muted sm:col-span-2">Only this part of the day is closed. The rest of the day can still be booked.</p>
+                </div>
+              )}
+            </fieldset>
+            <fieldset role="group" aria-label="Applies to" className="flex flex-col gap-3 sm:col-span-2">
+              <legend className="mb-1.5 text-sm font-medium text-ink">Applies to</legend>
+              <label className={`inline-flex min-h-11 cursor-pointer items-center gap-2.5 text-[14px] font-medium text-ink ${FOCUS_WITHIN}`}>
+                <input type="checkbox" checked={allServices} onChange={(e) => setAllServices(e.target.checked)} className="size-5 accent-navy" />
+                All services
+              </label>
+              {!allServices && (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {services.map((s) => {
+                      const on = chosen.includes(s.id)
+                      return (
+                        <label
+                          key={s.id}
+                          className={`relative inline-flex min-h-11 cursor-pointer items-center rounded-xl px-3.5 text-[14px] text-navy has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus ${on ? 'border-2 border-navy bg-status-confirmed-bg px-[13px] font-semibold' : 'border border-input-border bg-surface font-medium'}`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={on}
+                            onChange={(e) => setChosen(e.target.checked ? [...chosen, s.id] : chosen.filter((c) => c !== s.id))}
+                            className="absolute inset-0 size-full cursor-pointer opacity-0"
+                          />
+                          {s.name}
+                        </label>
+                      )
+                    })}
+                  </div>
+                  {chosen.length === 0 && <p className="text-[13px] text-ink-muted">Choose at least one service.</p>}
+                </>
+              )}
             </fieldset>
             <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-              <button type="submit" disabled={!date || reason.trim().length < 3 || add.isPending} className={`${date && reason.trim().length >= 3 ? BTN_PRIMARY : BTN_OUTLINE} max-md:w-full`}>
+              <button type="submit" disabled={!ready || add.isPending} className={`${ready ? BTN_PRIMARY : BTN_OUTLINE} max-md:w-full`}>
                 Add closure
               </button>
               {add.isError && (
@@ -260,7 +306,7 @@ export function BlackoutsCard({ services, triduum }: { services: AdminService[];
                 <span className="w-44 shrink-0 font-semibold text-ink">{formatDate(b.date)}</span>
                 <span className="min-w-0 flex-1 basis-48">
                   <span className="block text-ink">{b.reason}</span>
-                  <span className="block text-label text-ink-muted">{scope(b.sacraments)}</span>
+                  <span className="block text-label text-ink-muted">{when(b)} · {scope(b.sacraments)}</span>
                 </span>
                 <button
                   type="button"

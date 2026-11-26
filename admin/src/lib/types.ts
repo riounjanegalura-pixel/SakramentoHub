@@ -229,6 +229,9 @@ export interface AppNotification {
 export interface ScheduleBlackout {
   reason: string
   appliesTo: string
+  /** "HH:MM" for a closure that shuts only part of the day; null/absent = the whole day. */
+  start?: string | null
+  end?: string | null
 }
 export interface ScheduleMassItem {
   type: 'mass'
@@ -366,6 +369,9 @@ export interface Blackout {
   id: number
   date: string
   reason: string
+  /** "HH:MM" window closed on that day; both null = the whole day. */
+  startTime: string | null
+  endTime: string | null
   /** null = every service. */
   sacraments: Sacrament[] | null
 }
@@ -373,6 +379,9 @@ export interface BlackoutInput {
   date: string
   endDate?: string
   reason: string
+  /** Both or neither. Leave both out to close the whole day. */
+  startTime?: string
+  endTime?: string
   sacraments?: Sacrament[] | null
 }
 export interface AffectedBooking {

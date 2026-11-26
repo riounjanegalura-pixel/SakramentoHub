@@ -115,7 +115,7 @@ class SchedulingService
 
         $buffer = $r->offsite ? ParishSetting::travelBufferMinutes() : 0;
         $end = $this->toMinutes($this->endFor($r));
-        foreach ($this->blockedIntervals($r->date, $bookingId, $r->session ? $r : null) as [$bs, $be]) {
+        foreach ($this->blockedIntervals($r->date, $bookingId, $r->session ? $r : null, $r->sacrament) as [$bs, $be]) {
             if ($start - $buffer < $be && $bs < $end + $buffer) {
                 return $gone;
             }
@@ -208,10 +208,21 @@ class SchedulingService
     private function freeSessionStarts(Service $service, AppointmentRequest $r, ?string $exclude, bool $bookingTime = true): array
     {
         $earliest = $this->earliestStartMinutes($r->date, $bookingTime);
+        $closed = $this->calendar->timedClosures($r->date, $r->sacrament);
+        $length = $service->session_duration_minutes ?? $service->duration_minutes;
 
         return array_values(array_filter(
             $service->session_times ?? [],
-            fn (string $t) => $this->toMinutes($t) >= $earliest && $this->sessionInsideHours($t, $service) && $this->sessionRemaining($service, $r->date, $t, $exclude) > 0,
+            function (string $t) use ($service, $r, $exclude, $earliest, $closed, $length) {
+                $start = $this->toMinutes($t);
+                foreach ($closed as [$cs, $ce]) {
+                    if ($start < $ce && $cs < $start + $length) {
+                        return false;
+                    }
+                }
+
+                return $start >= $earliest && $this->sessionInsideHours($t, $service) && $this->sessionRemaining($service, $r->date, $t, $exclude) > 0;
+            },
         ));
     }
 
@@ -223,7 +234,7 @@ class SchedulingService
         }
 
         $buffer = $r->offsite ? ParishSetting::travelBufferMinutes() : 0;
-        $blocked = $this->blockedIntervals($r->date, $exclude);
+        $blocked = $this->blockedIntervals($r->date, $exclude, null, $r->sacrament);
 
         return array_values(array_filter(
             $this->possibleSlotStarts($service, $r, $bookingTime),
@@ -303,9 +314,11 @@ class SchedulingService
      * the priest, so same-sacrament bookings at its start and the service's
      * own session blocks are not conflicts.
      *
+     * $sacrament is the sacrament being scheduled; it picks the timed closures that apply.
+     *
      * @return list<array{0:int,1:int}>
      */
-    private function blockedIntervals(string $date, ?string $exclude, ?AppointmentRequest $session = null): array
+    private function blockedIntervals(string $date, ?string $exclude, ?AppointmentRequest $session = null, ?string $sacrament = null): array
     {
         $travel = ParishSetting::travelBufferMinutes();
         $intervals = [];
@@ -345,6 +358,13 @@ class SchedulingService
             $at = $event->parishTime();
             $start = $at->hour * 60 + $at->minute;
             $intervals[] = [$start, $start + (int) ($event->duration_minutes ?? 60)];
+        }
+
+        // Closures with a time window (a retreat 9-12, the priest away): they shut only that window, for the sacraments they name.
+        if ($sacrament !== null) {
+            foreach ($this->calendar->timedClosures($date, $sacrament) as $window) {
+                $intervals[] = $window;
+            }
         }
 
         return $intervals;

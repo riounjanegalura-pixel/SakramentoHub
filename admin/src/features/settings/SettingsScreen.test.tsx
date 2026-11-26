@@ -26,7 +26,7 @@ const settings = (): AdminSettings => ({
   triduum: [{ date: '2027-03-25', reason: 'Holy Thursday' }, { date: '2027-03-26', reason: 'Good Friday' }],
 })
 
-const blackout = (o: Partial<Blackout> = {}): Blackout => ({ id: 7, date: '2026-11-10', reason: 'Retreat', sacraments: null, ...o })
+const blackout = (o: Partial<Blackout> = {}): Blackout => ({ id: 7, date: '2026-11-10', reason: 'Retreat', startTime: null, endTime: null, sacraments: null, ...o })
 
 const signIn = (role: Role) =>
   useAuthStore.setState({ user: { id: 'u1', fullName: 'Someone', email: 's@example.com', phone: '', address: '', role, isActive: true } })
@@ -379,11 +379,66 @@ describe('SettingsScreen', () => {
     fireEvent.change(await screen.findByLabelText(/^From/), { target: { value: '2026-11-12' } })
     fireEvent.change(screen.getByLabelText(/^Until/), { target: { value: '2026-11-14' } })
     await userEvent.type(screen.getByLabelText(/^Reason/), 'Retreat')
-    await userEvent.click(within(screen.getByRole('group', { name: 'Applies to' })).getByLabelText('Baptism'))
+    const applies = screen.getByRole('group', { name: 'Applies to' })
+    await userEvent.click(within(applies).getByLabelText('All services'))
+    await userEvent.click(within(applies).getByLabelText('Baptism'))
     await userEvent.click(screen.getByRole('button', { name: 'Add closure' }))
 
     await waitFor(() => expect(create).toHaveBeenCalledWith({ date: '2026-11-12', endDate: '2026-11-14', reason: 'Retreat', sacraments: ['baptism'] }))
     expect(await screen.findByText('Closure added.')).toBeInTheDocument()
+  })
+
+  it('says "All services" out loud and needs a service once it is turned off', async () => {
+    signIn('admin')
+    renderWithProviders(<SettingsScreen />)
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Blackout dates' }))
+    expect(screen.queryByText(/leave all unticked/i)).not.toBeInTheDocument()
+    const applies = screen.getByRole('group', { name: 'Applies to' })
+    expect(within(applies).getByLabelText('All services')).toBeChecked()
+    expect(within(applies).queryByLabelText('Baptism')).not.toBeInTheDocument()
+
+    fireEvent.change(await screen.findByLabelText(/^From/), { target: { value: '2026-11-12' } })
+    await userEvent.type(screen.getByLabelText(/^Reason/), 'Retreat')
+    await userEvent.click(within(applies).getByLabelText('All services'))
+    expect(screen.getByRole('button', { name: 'Add closure' })).toBeDisabled()
+    await userEvent.click(within(applies).getByLabelText('Baptism'))
+    expect(screen.getByRole('button', { name: 'Add closure' })).toBeEnabled()
+  })
+
+  it('closes part of a day when All day is turned off', async () => {
+    signIn('staff')
+    const create = vi.spyOn(settingsData, 'createBlackouts').mockResolvedValue({ blackouts: [], affectedBookings: [] })
+    renderWithProviders(<SettingsScreen />)
+
+    await userEvent.click(await screen.findByRole('tab', { name: 'Blackout dates' }))
+    const time = screen.getByRole('group', { name: 'Time of day' })
+    expect(within(time).getByLabelText('All day')).toBeChecked()
+    expect(screen.queryByLabelText(/^Closed from/)).not.toBeInTheDocument()
+
+    fireEvent.change(await screen.findByLabelText(/^From/), { target: { value: '2026-11-12' } })
+    await userEvent.type(screen.getByLabelText(/^Reason/), 'Clergy retreat')
+    await userEvent.click(within(time).getByLabelText('All day'))
+    expect(screen.getByRole('button', { name: 'Add closure' })).toBeDisabled() // both times are needed
+
+    fireEvent.change(screen.getByLabelText(/^Closed from/), { target: { value: '10:00' } })
+    fireEvent.change(screen.getByLabelText(/^Closed until/), { target: { value: '09:00' } })
+    expect(screen.getByRole('alert')).toHaveTextContent('Closing time must be after the opening time.')
+    expect(screen.getByRole('button', { name: 'Add closure' })).toBeDisabled()
+
+    fireEvent.change(screen.getByLabelText(/^Closed until/), { target: { value: '12:00' } })
+    await userEvent.click(screen.getByRole('button', { name: 'Add closure' }))
+    await waitFor(() => expect(create).toHaveBeenCalledWith({ date: '2026-11-12', reason: 'Clergy retreat', startTime: '10:00', endTime: '12:00', sacraments: null }))
+  })
+
+  it('shows when a closure applies in the list', async () => {
+    signIn('staff')
+    vi.spyOn(settingsData, 'fetchBlackouts').mockResolvedValue([blackout({ startTime: '09:00', endTime: '12:00' }), blackout({ id: 9, reason: 'Fiesta' })])
+    renderWithProviders(<SettingsScreen />, { route: '/settings?tab=blackouts' })
+
+    const list = await screen.findByRole('list', { name: 'Upcoming closures' })
+    expect(within(list).getByText(/9:00 AM to 12:00 PM · All services/)).toBeInTheDocument()
+    expect(within(list).getByText(/All day · All services/)).toBeInTheDocument()
   })
 
   it('lists upcoming closures and deletes one after confirmation', async () => {
