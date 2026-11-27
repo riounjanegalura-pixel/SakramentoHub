@@ -76,6 +76,8 @@ function Button({
       data-variant={variant}
       data-size={size}
       className={classes}
+      initial={false}
+      animate={{ transform: press.rest }}
       whileTap={props.disabled || loading ? undefined : { transform: press.transform }}
       transition={press.transition}
       {...(props as React.ComponentProps<typeof m.button>)}

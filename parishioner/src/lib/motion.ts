@@ -22,7 +22,8 @@ export const railFill = (index: number) => ({
 /** Button press feedback: scale to 0.98 over 120 ms. */
 // `transform` as a full string, not the `scale` shorthand: on this Motion version the shorthand runs on the main thread and drops
 // frames while a page is loading; a transform string is hardware-accelerated in every version.
-export const press = { scale: 0.98, transform: 'scale(0.98)', transition: { duration: 0.12 } } as const
+// `rest` is the state a release returns to. Without it Motion animates back to `none`, which it reads as scale(0) and the button vanishes.
+export const press = { scale: 0.98, transform: 'scale(0.98)', rest: 'scale(1)', transition: { duration: 0.12 } } as const
 
 export const sheetSpring: Transition = { type: 'spring', stiffness: 380, damping: 36 }
 
